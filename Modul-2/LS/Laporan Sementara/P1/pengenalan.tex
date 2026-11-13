@@ -1,0 +1,180 @@
+\section{Pendahuluan}
+
+\subsection{Latar Belakang}
+Sistem tertanam (\textit{embedded system}) pada dasarnya bekerja dengan pola
+membaca besaran fisik melalui sensor, memprosesnya pada mikrokontroler, lalu
+menggerakkan aktuator sebagai keluarannya. Praktikum ini melanjutkan
+penggunaan ESP32 dengan \textit{framework} Arduino yang diprogram melalui
+PlatformIO di VSCode, dengan fokus pada dua hal:
+pembacaan sensor berdasarkan basis pengukurannya dan pengendalian berbagai
+jenis aktuator motor.
+
+Sensor dikelompokkan menurut prinsip transduksinya, yaitu resistif, kapasitif,
+induktif, akustik, dan optik. Basis resistif yang sebelumnya diperkenalkan
+melalui LDR diperluas pada modul ini dengan joystick 2-\textit{axis} KY-023
+yang berperan sebagai masukan kontrol interaktif, bukan sekadar pengukur
+besaran lingkungan. Di sisi aktuator, setiap jenis motor
+memerlukan metode pengendalian yang berbeda: motor DC dengan PWM dan driver
+L298N, motor stepper dengan driver ULN2003, motor servo dengan sinyal
+lebar pulsa, serta motor \textit{brushless} (BLDC) dengan \textit{Electronic
+Speed Controller} (ESC). Praktikum ini mencakup enam percobaan
+yang meliputi pembacaan sensor resistif, kapasitif, induktif, ultrasonik, dan
+inframerah, serta pengendalian keempat jenis motor tersebut.
+
+\subsection{Dasar Teori}
+
+\subsubsection{Sensor Resistif: Joystick 2-\textit{Axis}}
+Joystick 2-\textit{axis} KY-023 bekerja dengan basis transduksi resistif yang
+sama seperti LDR, tetapi di dalamnya terdapat dua potensiometer (sumbu X dan Y)
+yang porosnya digerakkan secara mekanis oleh stick, ditambah satu tombol tekan
+(SW) yang aktif saat stick ditekan. Perbedaan perannya
+adalah LDR berfungsi sebagai sensor pasif yang membaca intensitas cahaya,
+sedangkan joystick berfungsi sebagai masukan kontrol interaktif
+(\textit{Human-Machine Interface}) yang nilainya merupakan perintah dari
+pengguna untuk mengendalikan aktuator.
+
+Setiap sumbu menghasilkan nilai ADC 12-bit (0--4095) dengan titik netral di
+sekitar 2048 saat stick tidak disentuh. Nilai ini tidak selalu tepat 2048
+karena toleransi komponen, sehingga diperlukan \textit{dead zone}, yaitu
+rentang toleransi di sekitar titik tengah yang dianggap netral, agar motor
+tidak bergerak akibat \textit{noise} pembacaan ADC saat stick diam
+.
+
+\subsubsection{Sensor Kapasitif}
+Sensor kapasitif mendeteksi besaran fisik seperti sentuhan, kelembapan, atau
+jarak dekat melalui perubahan nilai kapasitansi. Modul TTP223 sudah
+mengintegrasikan rangkaian deteksi kapasitansi dan pembanding ambang batas
+sehingga menghasilkan keluaran digital HIGH/LOW yang siap pakai, umumnya aktif
+HIGH saat pad disentuh. Hal ini berbeda dengan fitur \textit{touch} bawaan ESP32
+(\texttt{touchRead()}) yang mengembalikan nilai mentah dan memerlukan
+penentuan ambang batas secara manual .
+
+
+\subsubsection{Sensor Induktif}
+Sensor induktif mendeteksi objek logam atau perubahan medan magnet melalui
+perubahan induktansi atau medan magnet. \textit{Hall effect sensor} mendeteksi
+keberadaan dan kekuatan medan magnet secara langsung, sehingga umum digunakan
+untuk mendeteksi posisi magnet atau kecepatan putar bersama magnet pada objek
+yang berputar . Contoh lain adalah \textit{inductive
+proximity sensor}, yang menghasilkan medan elektromagnetik berosilasi dan
+mendeteksi benda logam melalui redaman (\textit{eddy current}) pada medan
+tersebut .
+
+\subsubsection{Sensor Akustik dan Optik}
+Sensor ultrasonik HC-SR04 mengukur jarak berdasarkan waktu tempuh gelombang
+suara: pulsa dipancarkan, dipantulkan oleh objek, lalu diterima kembali, dan
+jarak dihitung dari selisih waktu serta kecepatan suara di udara. Pada program praktikum, durasi pantulan (dalam
+mikrodetik) dikonversi menjadi jarak (cm) dengan persamaan
+\begin{equation}
+  d = \frac{t \times 0{,}0343}{2},
+\end{equation}
+dengan $t$ adalah durasi pulsa \textit{echo} dalam mikrodetik, 0,0343 cm/\textmu s
+adalah kecepatan suara, dan pembagian dua karena gelombang menempuh jarak
+pergi-pulang. Sensor inframerah (IR) \textit{obstacle} mendeteksi
+objek dari pantulan cahaya inframerah dan umum digunakan sebagai sensor jarak
+dekat dengan keluaran digital .
+
+\subsubsection{PWM untuk Kontrol Kecepatan Motor DC}
+\textit{Pulse Width Modulation} (PWM) adalah teknik menghasilkan sinyal digital
+yang menyerupai sinyal analog dengan mengatur \textit{duty cycle}, yaitu
+persentase waktu sinyal HIGH dalam satu periode. Semakin besar \textit{duty
+cycle}, semakin besar tegangan rata-rata yang diterima beban sehingga kecepatan
+motor DC meningkat. Pada ESP32 dengan Arduino-ESP32 core 2.0.x,
+PWM diakses melalui API LEDC berbasis \textit{channel}: \texttt{ledcSetup()}
+mengonfigurasi frekuensi dan resolusi, \texttt{ledcAttachPin()} menghubungkan
+\textit{channel} ke pin fisik, dan \texttt{ledcWrite()} mengatur \textit{duty
+cycle} berdasarkan nomor \textit{channel}. Arah
+putar motor DC diatur terpisah melalui driver motor seperti L298N dengan dua
+pin digital (IN1 dan IN2).
+
+\subsubsection{Motor Servo}
+Motor servo juga dikendalikan dengan sinyal PWM, tetapi prinsipnya berbeda dari
+motor DC: lebar pulsa itu sendiri yang menentukan posisi sudut, bukan rata-rata
+\textit{duty cycle}. Sinyal kontrol servo umumnya berperiode 20 ms (50 Hz),
+dengan lebar pulsa sekitar 1 ms untuk sudut $0^\circ$ dan 2 ms untuk
+$180^\circ$. Pada \textit{framework} Arduino, detail ini
+diabstraksi oleh pustaka ESP32Servo sehingga servo dapat digerakkan dengan
+fungsi \texttt{write(angle)}.
+
+\subsubsection{Motor Stepper}
+Berbeda dengan motor DC yang berputar kontinu, motor stepper bergerak dalam
+langkah diskret (\textit{step}) sesuai urutan pengaktifan koilnya. Terdapat dua jenis driver yang umum:
+\begin{enumerate}
+  \item \textbf{Driver 4-fasa} (mis. ULN2003 untuk motor unipolar 28BYJ-48).
+        Mikrokontroler mengatur langsung nyala-mati keempat koil
+        (IN1--IN4) secara berurutan, misalnya pola \textit{half-step} 8
+        langkah. Pada 28BYJ-48 yang memiliki \textit{gearbox} reduksi
+        internal, satu putaran penuh poros luar memerlukan sekitar 4096
+        \textit{step}.
+  \item \textbf{Driver STEP/DIR} (mis. A4988 dan DRV8825 untuk motor bipolar
+        NEMA17). Urutan pengaktifan koil ditangani IC driver, sehingga
+        mikrokontroler cukup mengirim pin STEP (setiap transisi LOW ke HIGH
+        memutar motor satu \textit{step}, misalnya $1{,}8^\circ$ atau 200
+        \textit{step} per putaran), pin DIR (arah CW atau CCW), dan pin EN
+        (mengaktifkan atau menonaktifkan arus penahan koil). Beberapa driver
+        juga memiliki pin RESET/SLEEP yang umumnya perlu ditarik HIGH agar
+        driver aktif.
+\end{enumerate}
+
+\subsubsection{ESC dan Motor \textit{Brushless}}
+Motor \textit{brushless} (BLDC) tidak dapat dikendalikan langsung oleh driver
+H-\textit{bridge} sederhana karena memerlukan komutasi elektronik, yaitu
+pengaturan urutan pemberian arus ke tiga lilitan stator secara presisi agar
+rotor berputar. Tugas ini dilakukan oleh ESC, yang menerima sinyal kontrol
+sederhana dari mikrokontroler dan menerjemahkannya menjadi pola komutasi
+tiga fasa.
+
+Sinyal kontrol ESC identik dengan sinyal servo: pulsa periodik 50 Hz dengan
+lebar pulsa 1000 \textmu s sebagai \textit{throttle} minimum dan 2000 \textmu s
+sebagai \textit{throttle} maksimum. Karena itu ESC dapat dikendalikan dengan
+pustaka servo (\texttt{writeMicroseconds()}) atau dengan membangkitkan sinyal
+langsung dari peripheral LEDC melalui perhitungan \textit{duty cycle} yang
+setara. Hampir semua ESC mensyaratkan proses \textit{arming}
+sebelum motor dapat dijalankan, yaitu mengirim sinyal \textit{throttle}
+minimum secara stabil selama beberapa detik setelah ESC dinyalakan, sebagai
+mekanisme keamanan agar motor tidak berputar kencang akibat sinyal acak.
+
+Daya utama motor berasal dari baterai (umumnya LiPo 2S--4S, 7,4--14,8 V) melalui
+jalur terpisah dari jalur sinyal. Jalur sinyal tetap pada level logika rendah
+(3,3 V/5 V) yang aman bagi ESP32, dan GND sinyal harus disatukan dengan GND
+baterai (\textit{common ground}) agar referensi tegangan sinyal PWM konsisten.
+%===========================================================%
+\section{Tugas Pendahuluan}
+Bagian ini berisi jawaban dari tugas pendahuluan yang telah anda kerjakan, beserta penjelasan dari jawaban tersebut
+
+\begin{enumerate}
+    \item \textbf{Jelaskan prinsip kerja sensor resistif seperti joystick 2-axis dalam menghasilkan nilai analog yang bervariasi sesuai posisinya.}
+
+    \textbf{Jawaban:} Joystick 2-axis bekerja dengan prinsip transduksi resistif menggunakan dua buah potensiometer (resistor variabel) di dalamnya untuk mendeteksi pergerakan pada sumbu X dan sumbu Y. Ketika tuas joystick digerakkan secara mekanis, nilai resistansi pada masing-masing potensiometer ikut berubah. Perubahan resistansi ini mengubah tegangan keluaran melalui rangkaian pembagi tegangan, yang kemudian dibaca oleh pin ADC (\textit{Analog-to-Digital Converter}) mikrokontroler sebagai nilai analog 12-bit (0--4095) yang merepresentasikan posisi tuas joystick.
+
+    \item \textbf{Jelaskan perbedaan prinsip kerja sensor kapasitif (mis. touch sensor TTP223) dan sensor induktif (mis. hall effect sensor) dalam mendeteksi keberadaan suatu objek.}
+
+    \textbf{Jawaban:} Perbedaan prinsip kerja kedua sensor tersebut adalah sebagai berikut:
+    \begin{itemize}
+        \item \textbf{Sensor kapasitif (TTP223):} Mendeteksi keberadaan objek fisik (seperti sentuhan jari manusia) melalui perubahan nilai kapasitansi pada elektroda sensornya.
+        \item \textbf{Sensor induktif (\textit{Hall Effect}):} Mendeteksi keberadaan objek logam atau perubahan medan magnet di sekitar sensor melalui perubahan induktansi maupun paparan medan magnet secara langsung.
+    \end{itemize}
+
+    \item \textbf{Bagaimana sensor ultrasonik HC-SR04 mengukur jarak? Jelaskan hubungan antara waktu tempuh pantulan gelombang suara dan jarak objek yang terdeteksi.}
+
+    \textbf{Jawaban:} Sensor ultrasonik HC-SR04 memancarkan gelombang suara (pulsa ultrasonik) yang merambat di udara, memantul ketika mengenai objek, lalu diterima kembali oleh sensor. Jarak objek berbanding lurus dengan waktu tempuh gelombang suara tersebut. Karena waktu yang diukur merupakan waktu tempuh bolak-balik (pergi dan pulang), jarak objek dihitung dengan mengalikan total waktu tempuh dengan kecepatan suara di udara, kemudian dibagi dua:
+    \[
+        \text{Jarak} = \frac{\text{Waktu Tempuh} \times \text{Kecepatan Suara}}{2}
+    \]
+
+    \item \textbf{Jelaskan bagaimana duty cycle sinyal PWM memengaruhi kecepatan putar motor DC dan sudut motor servo, mengapa sinyal yang sama-sama berbasis PWM ini diinterpretasikan berbeda oleh kedua aktuator tersebut?}
+
+    \textbf{Jawaban:} Sinyal berbasis PWM diinterpretasikan secara berbeda oleh kedua aktuator karena perbedaan rangkaian pengendali internalnya:
+    \begin{itemize}
+        \item \textbf{Motor DC:} Sinyal PWM dimanfaatkan untuk mengatur tegangan rata-rata yang diterima motor melalui pengaturan \textit{duty cycle} (persentase durasi sinyal HIGH dalam satu periode). Semakin besar \textit{duty cycle}, semakin besar tegangan rata-rata yang disuplai ke motor sehingga kecepatan putarnya meningkat.
+        \item \textbf{Motor Servo:} Rangkaian kontrol di dalam motor servo tidak membaca nilai rata-rata tegangan, melainkan mengukur \textbf{lebar pulsa (\textit{pulse width})} secara spesifik dalam periode sinyal tetap (umumnya 20 ms atau frekuensi 50 Hz). Lebar pulsa tersebut diterjemahkan menjadi posisi sudut absolut; misalnya lebar pulsa 1 ms menggerakkan servo ke sudut $0^\circ$, sedangkan lebar pulsa 2 ms menggerakkan servo ke sudut $180^\circ$.
+    \end{itemize}
+
+    \item \textbf{Apa perbedaan mendasar antara mengendalikan motor stepper dan motor DC biasa, terutama dari segi presisi posisi putaran?}
+
+    \textbf{Jawaban:} Motor DC biasa berputar secara kontinu (terus-menerus) selama dialiri arus listrik, sehingga posisi sudut putarannya tidak dapat dikendalikan secara presisi tanpa bantuan sensor umpan balik tambahan. Sebaliknya, motor stepper bergerak dalam langkah-langkah diskret (\textit{step}) sesuai urutan pengaktifan kumparan (koil) di dalamnya. Karakteristik ini memungkinkan motor stepper diputar dan ditahan pada sudut tertentu secara sangat presisi berdasarkan jumlah \textit{step} yang diberikan (misalnya diprogram berputar tepat sejauh $90^\circ$).
+
+    \item \textbf{Mengapa motor brushless (BLDC) memerlukan ESC (Electronic Speed Controller) untuk dapat berputar, sedangkan motor DC biasa cukup dikendalikan melalui driver H-bridge sederhana?}
+
+    \textbf{Jawaban:} Motor DC biasa dilengkapi dengan sistem sikat (\textit{brush}) mekanis di dalamnya untuk membalik arah arus pada kumparan rotor secara otomatis, sehingga mikrokontroler cukup mengatur polaritas dan tegangan melalui driver H-bridge sederhana. Sebaliknya, motor BLDC tidak memiliki sikat mekanis tersebut. Agar rotor motor BLDC dapat berputar, diperlukan \textbf{komutasi elektronik}---yaitu pengaturan urutan pemberian arus listrik ke tiga fasa lilitan stator secara presisi dan bergantian. Proses komutasi 3-fasa inilah yang dijalankan secara otomatis oleh ESC berdasarkan sinyal kontrol dari mikrokontroler.
+\end{enumerate}
