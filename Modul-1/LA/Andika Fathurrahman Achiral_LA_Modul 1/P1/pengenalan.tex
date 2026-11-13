@@ -1,0 +1,377 @@
+\section{Langkah-Langkah Percobaan}
+Pada Modul 1 ini dilakukan lima rangkaian percobaan untuk mengenal arsitektur serta lingkungan pengembangan dua jenis mikrokontroler, yaitu STM32 Blackpill dan ESP32 DevKit, meliputi konfigurasi \textit{digital output}, \textit{digital input} dengan resistor \textit{pull-up}/\textit{pull-down}, penanganan \textit{debouncing} pada tombol mekanik, serta pembacaan \textit{analog input} melalui peripheral \textit{Analog-to-Digital Converter} (ADC).
+
+\subsection{Alat dan Bahan}
+
+Seluruh perangkat keras dan perangkat lunak yang dipersiapkan serta digunakan selama pelaksanaan praktikum Modul 1 dirinci pada Tabel~\ref{tab:alat_bahan}.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Daftar alat dan bahan praktikum Modul 1}
+    \label{tab:alat_bahan}
+    \begin{tabularx}{\textwidth}{c l X c}
+        \toprule
+        \textbf{No} & \textbf{Nama Komponen} & \textbf{Spesifikasi / Keterangan} & \textbf{Jumlah} \\
+        \midrule
+        1  & Board STM32 Blackpill & STM32F401CCU6 & 1 \\
+        2  & ST-Link V2 & Programmer/debugger eksternal via antarmuka SWD & 1 \\
+        3  & Board ESP32 DevKit & ESP32 DevKit v1 & 1 \\
+        4  & Kabel jumper female-female & Penghubung ST-Link V2 ke STM32 Blackpill & 4 \\
+        5  & Kabel USB Micro / USB-C & Penghubung ST-Link dan ESP32 ke komputer & 2 \\
+        6  & Breadboard & 830 titik & 1 \\
+        7  & Kabel jumper male-male & Penghubung rangkaian pada breadboard & Secukupnya \\
+        8  & LED + resistor $220\,\Omega$ & Uji Blink ESP32 (apabila tidak terdapat LED onboard) & 1 \\
+        9  & Pushbutton (tactile) & Percobaan 3 (\textit{pull-up}/\textit{pull-down}) dan Percobaan 4 (\textit{debouncing}) & 2 \\
+        10 & Resistor $10\,\text{k}\Omega$ & \textit{Pull-up}/\textit{pull-down} eksternal (Percobaan 3) dan pembagi tegangan LDR (Percobaan 5) & 3 \\
+        11 & LDR & \textit{Light Dependent Resistor} (Percobaan 5) & 1 \\
+        12 & Laptop / PC & Terpasang Visual Studio Code dan ekstensi PlatformIO & 1 \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\subsection{Persiapan Lingkungan Pengembangan dan Proyek PlatformIO}
+
+Sebelum melaksanakan seluruh percobaan, dilakukan tahap persiapan perangkat lunak dan struktur proyek sebagai berikut:
+\begin{enumerate}[label=\arabic*.]
+    \item Memastikan Visual Studio Code, ekstensi PlatformIO IDE, serta driver USB yang diperlukan (driver ST-Link untuk STM32 dan driver USB-to-UART CP2102/CH340 untuk ESP32) telah terpasang dengan baik pada komputer.
+    \item Menyiapkan board STM32 Blackpill beserta programmer ST-Link V2 dan board ESP32 DevKit dalam keadaan belum terhubung ke port USB komputer.
+    \item Membuat \textbf{satu} proyek PlatformIO baru melalui menu \textit{PlatformIO Home} (\textit{New Project}) dengan nama proyek \texttt{modul1-praktikum} yang digunakan secara terpadu untuk seluruh Percobaan 1 hingga Percobaan 5.
+    \item Menyesuaikan isi berkas konfigurasi \texttt{platformio.ini} serta berkas kode sumber utama (\texttt{src/main.cpp} atau \texttt{src/main.c}) pada proyek yang sama setiap kali berpindah percobaan, kemudian menunggu proses \textit{refresh}/\textit{re-index} PlatformIO pada \textit{status bar} Visual Studio Code selesai sebelum menjalankan perintah \textbf{Build} maupun \textbf{Upload}.
+\end{enumerate}
+
+\subsection{Percobaan 1: Pengenalan STM32 Blackpill (Blink)}
+
+Percobaan pertama bertujuan menguji proses pemrograman dasar (\textit{flashing}) pada board STM32F401CCU6 Blackpill menggunakan framework Arduino (STM32duino) dan programmer ST-Link V2 melalui antarmuka \textit{Serial Wire Debug} (SWD) dengan memanfaatkan LED onboard pada pin \texttt{PC13}.
+
+\subsubsection*{Konfigurasi \texttt{platformio.ini}}
+\begin{lstlisting}
+[env:blackpill_f401cc]
+platform = ststm32
+board = blackpill_f401cc
+framework = arduino
+upload_protocol = stlink
+debug_tool = stlink
+\end{lstlisting}
+
+\subsubsection*{Prosedur Pelaksanaan}
+\begin{enumerate}[label=\arabic*.]
+    \item Membuka proyek \texttt{modul1-praktikum} dan mengubah isi berkas \texttt{platformio.ini} sesuai konfigurasi board \texttt{blackpill\_f401cc} dengan framework \texttt{arduino} dan protokol unggah \texttt{stlink}, lalu menunggu proses \textit{re-index} PlatformIO selesai.
+    \item Menghubungkan pin programmer ST-Link V2 ke header SWD pada STM32 Blackpill menggunakan empat kabel jumper \textit{female-female} sesuai pemetaan pada Tabel~\ref{tab:wiring_stlink}, serta memastikan jalur tegangan referensi berada pada $3.3\,\text{V}$.
+    \item Menghubungkan ST-Link V2 ke port USB komputer.
+    \item Menuliskan kode program Blink ke dalam berkas \texttt{src/main.cpp}.
+    \item Menekan tombol \textbf{Build} untuk mengompilasi program, kemudian menekan tombol \textbf{Upload} untuk mengunggah program ke mikrokontroler STM32 Blackpill.
+    \item Mengamati nyala LED onboard pada pin \texttt{PC13} yang berkedip secara periodik (menyala selama $500\,\text{ms}$ saat berlogika \texttt{LOW} karena bersifat \textit{active-low}, dan padam selama $500\,\text{ms}$ saat berlogika \texttt{HIGH}).
+\end{enumerate}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Pemetaan koneksi pin ST-Link V2 ke STM32 Blackpill}
+    \label{tab:wiring_stlink}
+    \begin{tabular}{l l l}
+        \toprule
+        \textbf{Pin ST-Link V2} & \textbf{Pin STM32 Blackpill} & \textbf{Fungsi} \\
+        \midrule
+        SWDIO & SWDIO & Jalur data serial debug/pemrograman \\
+        SWCLK & SWCLK & Jalur sinyal clock debug/pemrograman \\
+        GND   & GND   & Referensi ground bersama \\
+        3.3V  & 3V3   & Tegangan catu/referensi target board ($3.3\,\text{V}$) \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsubsection*{Kode Program (\texttt{src/main.cpp})}
+\begin{lstlisting}[language=C++]
+#include <Arduino.h>
+
+#define LED_PIN PC13
+
+void setup()
+{
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop()
+{
+  digitalWrite(LED_PIN, LOW);  // LED onboard aktif LOW -> LOW berarti menyala
+  delay(500);
+  digitalWrite(LED_PIN, HIGH); // HIGH berarti mati
+  delay(500);
+}
+\end{lstlisting}
+
+\subsection{Percobaan 2: Pengenalan ESP32 dengan Framework ESP-IDF (Blink)}
+
+Percobaan kedua bertujuan mengenalkan arsitektur pemrograman native ESP32 menggunakan framework ESP-IDF berbasis FreeRTOS melalui fungsi utama \texttt{app\_main()} untuk mengendalikan LED onboard pada \texttt{GPIO\_NUM\_2}.
+
+\subsubsection*{Konfigurasi \texttt{platformio.ini}}
+\begin{lstlisting}
+[env:esp32dev]
+platform = espressif32
+board = esp32dev
+framework = espidf
+\end{lstlisting}
+
+\subsubsection*{Prosedur Pelaksanaan}
+\begin{enumerate}[label=\arabic*.]
+    \item Melepaskan koneksi ST-Link V2 dari komputer, lalu mengubah isi berkas \texttt{platformio.ini} menggunakan konfigurasi board \texttt{esp32dev} dengan framework \texttt{espidf} dan menunggu proses konfigurasi ulang PlatformIO selesai.
+    \item Menghubungkan board ESP32 DevKit v1 ke port USB komputer menggunakan kabel USB, serta memastikan port serial terdeteksi oleh sistem operasi.
+    \item Menghapus berkas \texttt{src/main.cpp} pada direktori proyek, kemudian membuat berkas sumber baru bernama \texttt{src/main.c}.
+    \item Menuliskan kode program Blink berbasis ESP-IDF dan FreeRTOS pada \texttt{src/main.c}.
+    \item Menjalankan proses \textbf{Build} dan \textbf{Upload} ke board ESP32 DevKit.
+    \item Mengamati kedipan LED onboard ESP32 (\texttt{GPIO 2}) dengan interval waktu tunda $500\,\text{ms}$ menggunakan fungsi \texttt{vTaskDelay(pdMS\_TO\_TICKS(500))}, serta mencatat perbedaan struktur pemrograman antara ESP-IDF dan Arduino.
+\end{enumerate}
+
+\subsubsection*{Kode Program (\texttt{src/main.c})}
+\begin{lstlisting}[language=C]
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/gpio.h"
+
+#define LED_PIN GPIO_NUM_2
+
+void app_main(void)
+{
+  gpio_reset_pin(LED_PIN);
+  gpio_set_direction(LED_PIN, GPIO_MODE_OUTPUT);
+
+  while (1)
+  {
+    gpio_set_level(LED_PIN, 1);
+    vTaskDelay(pdMS_TO_TICKS(500));
+    gpio_set_level(LED_PIN, 0);
+    vTaskDelay(pdMS_TO_TICKS(500));
+  }
+}
+\end{lstlisting}
+
+\subsection{Percobaan 3: Pull-up dan Pull-down: Eksternal vs Internal (ESP32 + Framework Arduino)}
+
+Percobaan ketiga dilakukan untuk mengamati dan membandingkan pembacaan masukan digital dari dua buah \textit{pushbutton} menggunakan konfigurasi resistor \textit{pull-up} dan \textit{pull-down}, baik yang dirangkai secara eksternal menggunakan resistor fisik $10\,\text{k}\Omega$ (Bagian A) maupun yang diaktifkan secara internal melalui perangkat lunak pada ESP32 (Bagian B).
+
+\subsubsection*{Konfigurasi \texttt{platformio.ini}}
+\begin{lstlisting}
+[env:esp32dev]
+platform = espressif32
+board = esp32dev
+framework = arduino
+\end{lstlisting}
+
+\subsubsection*{Prosedur Pelaksanaan Bagian A (Pull-up dan Pull-down Eksternal)}
+\begin{enumerate}[label=\arabic*.]
+    \item Mengubah kembali konfigurasi \texttt{platformio.ini} ke framework \texttt{arduino}, menghapus berkas \texttt{src/main.c}, dan membuat kembali berkas \texttt{src/main.cpp}.
+    \item Merangkai dua buah \textit{pushbutton} dan dua buah resistor $10\,\text{k}\Omega$ pada breadboard yang terhubung ke pin \texttt{GPIO 32} dan \texttt{GPIO 33} ESP32 sesuai pemetaan rangkaian eksternal pada Tabel~\ref{tab:wiring_pull_eksternal}.
+    \item Menuliskan \textbf{Kode Program A (Eksternal)} pada berkas \texttt{src/main.cpp}, kemudian melakukan \textbf{Build} dan \textbf{Upload}.
+    \item Membuka \textit{Serial Monitor} dengan \textit{baud rate} $115200\,\text{bps}$, menekan masing-masing tombol secara bergantian, dan mencatat status logika yang terbaca.
+\end{enumerate}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Skema pengkabelan Bagian A (\textit{pull-up} dan \textit{pull-down} eksternal)}
+    \label{tab:wiring_pull_eksternal}
+    \begin{tabularx}{\textwidth}{l l X}
+        \toprule
+        \textbf{Komponen} & \textbf{Pin ESP32} & \textbf{Keterangan Koneksi} \\
+        \midrule
+        Pushbutton 1 (\textit{pull-up} eksternal)   & GPIO 32 & Satu kaki ke GPIO 32 dan ke $3.3\,\text{V}$ melalui resistor $10\,\text{k}\Omega$; kaki lainnya ke GND. \\
+        Pushbutton 2 (\textit{pull-down} eksternal) & GPIO 33 & Satu kaki ke GPIO 33 dan ke GND melalui resistor $10\,\text{k}\Omega$; kaki lainnya ke $3.3\,\text{V}$. \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\subsubsection*{Kode Program A: Pull-up dan Pull-down Eksternal (\texttt{src/main.cpp})}
+\begin{lstlisting}[language=C++]
+#include <Arduino.h>
+
+#define BUTTON_PULLUP_PIN 32   // pull-up eksternal
+#define BUTTON_PULLDOWN_PIN 33 // pull-down eksternal
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(BUTTON_PULLUP_PIN, INPUT);   // resistor pull-up dipasang eksternal, bukan INPUT_PULLUP internal
+  pinMode(BUTTON_PULLDOWN_PIN, INPUT); // resistor pull-down dipasang eksternal
+}
+
+void loop() {
+  int stateUp = digitalRead(BUTTON_PULLUP_PIN);
+  int stateDown = digitalRead(BUTTON_PULLDOWN_PIN);
+
+  Serial.printf("[EKSTERNAL] Pull-up (GPIO32): %s | Pull-down (GPIO33): %s\n",
+                stateUp == LOW ? "DITEKAN" : "TIDAK DITEKAN",
+                stateDown == HIGH ? "DITEKAN" : "TIDAK DITEKAN");
+  delay(200);
+}
+\end{lstlisting}
+
+\subsubsection*{Prosedur Pelaksanaan Bagian B (Pull-up dan Pull-down Internal)}
+\begin{enumerate}[label=\arabic*.]
+    \item Melepaskan kedua resistor eksternal $10\,\text{k}\Omega$ dari breadboard dengan tetap mempertahankan posisi kedua \textit{pushbutton} pada pasangan kaki kontak yang tepat sesuai Tabel~\ref{tab:wiring_pull_internal}.
+    \item Mengganti isi berkas \texttt{src/main.cpp} dengan \textbf{Kode Program B (Internal)} yang mengaktifkan mode \texttt{INPUT\_PULLUP} pada \texttt{GPIO 32} dan \texttt{INPUT\_PULLDOWN} pada \texttt{GPIO 33}.
+    \item Melakukan \textbf{Build} dan \textbf{Upload}, lalu membuka \textit{Serial Monitor} ($115200\,\text{bps}$) dan menguji penekanan kedua tombol.
+    \item Membandingkan keluaran status penekanan tombol antara konfigurasi eksternal (Bagian A) dan konfigurasi internal (Bagian B).
+\end{enumerate}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Skema pengkabelan Bagian B (\textit{pull-up} dan \textit{pull-down} internal)}
+    \label{tab:wiring_pull_internal}
+    \begin{tabularx}{\textwidth}{l l X}
+        \toprule
+        \textbf{Komponen} & \textbf{Pin ESP32} & \textbf{Keterangan Koneksi} \\
+        \midrule
+        Pushbutton 1 (\textit{pull-up} internal)   & GPIO 32 & Satu kaki ke GPIO 32, kaki lainnya ke GND; tanpa resistor eksternal (\texttt{INPUT\_PULLUP}). \\
+        Pushbutton 2 (\textit{pull-down} internal) & GPIO 33 & Satu kaki ke GPIO 33, kaki lainnya ke $3.3\,\text{V}$; tanpa resistor eksternal (\texttt{INPUT\_PULLDOWN}). \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\subsubsection*{Kode Program B: Pull-up dan Pull-down Internal (\texttt{src/main.cpp})}
+\begin{lstlisting}[language=C++]
+#include <Arduino.h>
+
+#define BUTTON_PULLUP_PIN 32   // pull-up internal, pin sama seperti Kode Program A
+#define BUTTON_PULLDOWN_PIN 33 // pull-down internal, pin sama seperti Kode Program A
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(BUTTON_PULLUP_PIN, INPUT_PULLUP);     // pull-up internal ESP32, tanpa resistor eksternal
+  pinMode(BUTTON_PULLDOWN_PIN, INPUT_PULLDOWN); // pull-down internal ESP32, tanpa resistor eksternal
+}
+
+void loop() {
+  int stateUp = digitalRead(BUTTON_PULLUP_PIN);
+  int stateDown = digitalRead(BUTTON_PULLDOWN_PIN);
+
+  Serial.printf("[INTERNAL] Pull-up (GPIO32): %s | Pull-down (GPIO33): %s\n",
+                stateUp == LOW ? "DITEKAN" : "TIDAK DITEKAN",
+                stateDown == HIGH ? "DITEKAN" : "TIDAK DITEKAN");
+  delay(200);
+}
+\end{lstlisting}
+
+\subsection{Percobaan 4: Debouncing pada Input Tombol GPIO (ESP32 + Framework Arduino)}
+
+Percobaan keempat bertujuan mengamati fenomena \textit{bouncing} pada kontak mekanik \textit{pushbutton} serta menguji efektivitas algoritma \textit{software debouncing} berbasis pewaktu non-blocking \texttt{millis()} dengan membandingkan dua pencacah (\texttt{counterNoDebounce} dan \texttt{counterWithDebounce}).
+
+\subsubsection*{Prosedur Pelaksanaan}
+\begin{enumerate}[label=\arabic*.]
+    \item Mempertahankan konfigurasi \texttt{platformio.ini} dari Percobaan 3 (board \texttt{esp32dev}, framework \texttt{arduino}).
+    \item Merangkai satu buah \textit{pushbutton} pada breadboard dengan menghubungkan satu kakinya ke pin \texttt{GPIO 25} ESP32 dan kaki pasangannya ke jalur \texttt{GND} (memanfaatkan resistor \texttt{INPUT\_PULLUP} internal).
+    \item Menuliskan kode program perbandingan pencacah tanpa dan dengan \textit{debouncing} pada berkas \texttt{src/main.cpp} dengan nilai awal \texttt{DEBOUNCE\_DELAY} sebesar $50\,\text{ms}$, lalu menjalankan \textbf{Build} dan \textbf{Upload}.
+    \item Membuka \textit{Serial Monitor} ($115200\,\text{bps}$) dan menekan tombol satu kali dengan variasi kecepatan serta tekanan (tekanan cepat dan tegas, maupun tekanan perlahan dan ragu-ragu), kemudian mencatat perbandingan nilai \texttt{counterNoDebounce} dan \texttt{counterWithDebounce}.
+    \item Mengubah nilai konstanta \texttt{DEBOUNCE\_DELAY} menjadi $10\,\text{ms}$, melakukan \textbf{Build} dan \textbf{Upload}, lalu menguji kembali penekanan tombol dan mencatat hasilnya.
+    \item Mengubah nilai konstanta \texttt{DEBOUNCE\_DELAY} menjadi $200\,\text{ms}$, melakukan \textbf{Build} dan \textbf{Upload}, lalu menekan tombol secara cepat dan berulang kali untuk mengamati kestabilan pembacaan serta kecepatan respons tombol terhadap ketiga variasi waktu tunda ($10\,\text{ms}$, $50\,\text{ms}$, dan $200\,\text{ms}$).
+\end{enumerate}
+
+\subsubsection*{Kode Program (\texttt{src/main.cpp})}
+\begin{lstlisting}[language=C++]
+#include <Arduino.h>
+
+#define BUTTON_PIN 25
+#define DEBOUNCE_DELAY 50 // ms
+
+// Tanpa debouncing
+int rawLastState = HIGH;
+unsigned long counterNoDebounce = 0;
+
+// Dengan debouncing
+int lastFlickerableState = HIGH;
+int stableState = HIGH;
+unsigned long lastDebounceTime = 0;
+unsigned long counterWithDebounce = 0;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+}
+
+void loop() {
+  int reading = digitalRead(BUTTON_PIN);
+
+  // ===== Tanpa Debouncing =====
+  // Langsung dihitung setiap transisi HIGH->LOW, tanpa validasi waktu
+  if (reading == LOW && rawLastState == HIGH) {
+    counterNoDebounce++;
+  }
+  rawLastState = reading;
+
+  // ===== Dengan Debouncing =====
+  if (reading != lastFlickerableState) {
+    lastDebounceTime = millis();
+  }
+  if ((millis() - lastDebounceTime) > DEBOUNCE_DELAY) {
+    if (reading != stableState) {
+      stableState = reading;
+      if (stableState == LOW) {
+        counterWithDebounce++;
+      }
+    }
+  }
+  lastFlickerableState = reading;
+
+  // ===== Tampilkan kedua nilai secara bersamaan =====
+  static unsigned long lastPrintedNoDebounce = 0, lastPrintedWithDebounce = 0;
+  if (counterNoDebounce != lastPrintedNoDebounce || counterWithDebounce != lastPrintedWithDebounce) {
+    Serial.printf("Tanpa Debounce: %lu\t| Dengan Debounce: %lu\n", counterNoDebounce, counterWithDebounce);
+    lastPrintedNoDebounce = counterNoDebounce;
+    lastPrintedWithDebounce = counterWithDebounce;
+  }
+}
+\end{lstlisting}
+
+\subsection{Percobaan 5: Akses GPIO Analog: Pembacaan ADC dengan LDR (ESP32 + Framework Arduino)}
+
+Percobaan kelima bertujuan mengimplementasikan mode akses GPIO ketiga, yaitu \textit{analog input}, menggunakan peripheral ADC 12-bit pada kanal ADC1 (\texttt{GPIO 34}) ESP32 untuk membaca perubahan tegangan pada rangkaian pembagi tegangan sensor cahaya \textit{Light Dependent Resistor} (LDR).
+
+\subsubsection*{Prosedur Pelaksanaan}
+\begin{enumerate}[label=\arabic*.]
+    \item Mempertahankan konfigurasi \texttt{platformio.ini} pada board \texttt{esp32dev} dengan framework \texttt{arduino}.
+    \item Merangkai sensor LDR dan resistor tetap $10\,\text{k}\Omega$ secara seri sebagai rangkaian pembagi tegangan pada breadboard sesuai pemetaan pada Tabel~\ref{tab:wiring_ldr}, dengan titik tengah kedua komponen dihubungkan ke pin \texttt{GPIO 34} ESP32.
+    \item Menuliskan kode program pembacaan nilai mentah ADC (\texttt{analogRead(34)}) beserta konversinya ke satuan tegangan ($0\text{--}3.3\,\text{V}$) pada berkas \texttt{src/main.cpp}.
+    \item Menjalankan \textbf{Build} dan \textbf{Upload}, lalu membuka \textit{Serial Monitor} ($115200\,\text{bps}$).
+    \item Memberikan variasi intensitas cahaya pada permukaan LDR dengan cara menutup LDR menggunakan tangan (kondisi gelap), membiarkannya pada pencahayaan ruangan normal, serta menyinarinya menggunakan sumber cahaya lampu (kondisi terang), kemudian mencatat perubahan nilai mentah ADC ($0\text{--}4095$) dan nilai tegangan keluarannya.
+\end{enumerate}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Skema pengkabelan pembagi tegangan sensor LDR pada Percobaan 5}
+    \label{tab:wiring_ldr}
+    \begin{tabularx}{\textwidth}{l l X}
+        \toprule
+        \textbf{Komponen} & \textbf{Pin ESP32} & \textbf{Keterangan Koneksi} \\
+        \midrule
+        LDR + Resistor $10\,\text{k}\Omega$ & GPIO 34 (ADC1\_CH6) & Satu kaki LDR ke $3.3\,\text{V}$; kaki LDR lainnya dihubungkan ke titik simpul \texttt{GPIO 34} dan ke GND melalui resistor $10\,\text{k}\Omega$. \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\subsubsection*{Kode Program (\texttt{src/main.cpp})}
+\begin{lstlisting}[language=C++]
+#include <Arduino.h>
+
+#define LDR_PIN 34
+
+void setup() {
+  Serial.begin(115200);
+}
+
+void loop() {
+  int raw = analogRead(LDR_PIN);
+  float voltage = raw * (3.3 / 4095.0);
+
+  Serial.printf("LDR raw: %d | Tegangan: %.2fV\n", raw, voltage);
+  delay(300);
+}
+\end{lstlisting}
+
+\section{Analisis Hasil Percobaan}
+Berisi pembahasan terhadap hasil yang diperoleh selama praktikum. Analisis dilakukan dengan membandingkan hasil percobaan terhadap teori, serta mengidentifikasi faktor-faktor yang memengaruhi hasil, seperti kesalahan alat atau langkah percobaan. Tujuan bagian ini adalah untuk mengevaluasi keberhasilan percobaan dan memastikan pemahaman praktikan terkait praktikum yang telah dilaksanakan.
+
+\section{Hasil Tugas Modul}
+Bagian ini memuat hasil dari pengerjaan tugas tambahan yang diberikan dalam modul praktikum serta penjelasan dari jawaban tersebut. 
+
+\section{Kesimpulan}
+Kesimpulan berisi ringkasan dari hasil praktikum dan hal-hal penting yang didapatkan. Bagian ini menjawab tujuan praktikum, mencantumkan hasil yang sesuai atau tidak sesuai dengan teori, serta pembelajaran yang diperoleh oleh praktikan.
+
+\section{Lampiran}
+\subsection{Dokumentasi saat praktikum}
+Menampilkan foto selama pelaksanaan praktikum. Dokumentasi meliputi foto alat yng digunakan dan foto praktikan saat praktikum. Tujuannya sebagai bukti telah dilakukan kegiatan praktikum.
