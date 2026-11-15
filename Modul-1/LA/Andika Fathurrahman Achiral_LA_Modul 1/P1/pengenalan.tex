@@ -364,7 +364,6 @@ void loop() {
 \end{lstlisting}
 
 \section{Analisis Hasil Percobaan}
-\providecommand{\isi}[1]{\textcolor{red}{\textbf{[ISI: #1]}}}
 
 \subsection{Percobaan 1: Blink pada STM32 Blackpill}
 
@@ -720,8 +719,77 @@ void loop() {
 
 \section{Kesimpulan}
 
-Praktikum Modul 1 telah memperkenalkan konfigurasi lingkungan pengembangan \textbf{PlatformIO pada Visual Studio Code} serta dasar pemrograman mikrokontroler \textbf{STM32 Blackpill} dan \textbf{ESP32} melalui akses GPIO digital maupun analog[cite: 1]. Berdasarkan hasil pengujian, \textbf{Percobaan 1 dan Percobaan 2 berhasil sepenuhnya sesuai dengan teori}, di mana program \textit{Blink} mampu mengendalikan LED \textit{onboard} secara periodik setiap 500~ms menggunakan \textit{framework} Arduino melalui ST-Link pada STM32 (aktif \texttt{LOW} pada \texttt{PC13}) maupun \textit{framework} ESP-IDF pada ESP32 (\texttt{GPIO 2})[cite: 1]. Sebaliknya, \textbf{hasil pada Percobaan 3, Percobaan 4, dan Percobaan 5 belum sepenuhnya sesuai dengan teori} akibat keterbatasan dokumentasi data serta dugaan kesalahan penyusunan rangkaian pada \textit{breadboard}, sehingga pembacaan tombol pada konfigurasi \textit{pull-up}/\textit{pull-down} dan \textit{debouncing} kurang optimal serta sensor LDR gagal merespons perubahan nilai ADC pada rangkaian pembagi tegangan[cite: 1]. Melalui rangkaian kegiatan ini, praktikan memperoleh pembelajaran penting mengenai perbedaan arsitektur dan tingkat abstraksi \textit{framework} Arduino versus ESP-IDF, mekanisme pencegahan kondisi \textit{floating} dan efek \textit{bouncing} pada input mekanik, prinsip pembacaan sinyal analog melalui ADC 12-bit, serta pentingnya ketelitian verifikasi jalur pengkabelan perangkat keras sebelum menjalankan program[cite: 1].
+Praktikum Modul 1 telah memperkenalkan konfigurasi lingkungan pengembangan \textbf{PlatformIO pada Visual Studio Code} serta dasar pemrograman mikrokontroler \textbf{STM32 Blackpill} dan \textbf{ESP32} melalui akses GPIO digital maupun analog[cite: 1]. Berdasarkan hasil pengujian, \textbf{Percobaan 1 dan Percobaan 2 berhasil sepenuhnya sesuai dengan teori}, di mana program \textit{Blink} mampu mengendalikan LED \textit{onboard} secara periodik setiap 500~ms menggunakan \textit{framework} Arduino melalui ST-Link pada STM32 (aktif \texttt{LOW} pada \texttt{PC13}) maupun \textit{framework} ESP-IDF pada ESP32 (\texttt{GPIO 2})[cite: 1]. Sebaliknya, \textbf{hasil pada Percobaan 3, Percobaan 4, dan Percobaan 5 belum sepenuhnya sesuai dengan teori} akibat keterbatasan dokumentasi data serta dugaan kesalahan penyusunan rangkaian pada \textit{breadboard}, sehingga pembacaan tombol pada konfigurasi \textit{pull-up}/\textit{pull-down} dan \textit{debouncing} kurang optimal serta sensor LDR gagal merespons perubahan nilai ADC pada rangkaian pembagi tegangan[cite: 1]. Melalui rangkaian kegiatan ini, praktikan memperoleh pembelajaran penting mengenai perbedaan arsitektur dan tingkat abstraksi \textit{framework} Arduino versus ESP-IDF, mekanisme pencegahan kondisi \textit{floating} dan efek \textit{bouncing} pada input mekanik, prinsip pembacaan sinyal analog melalui ADC 12-bit, serta pentingnya ketelitian verifikasi jalur pengkabelan perangkat keras sebelum menjalankan program.
 
 \section{Lampiran}
 \subsection{Dokumentasi saat praktikum}
-Menampilkan foto selama pelaksanaan praktikum. Dokumentasi meliputi foto alat yng digunakan dan foto praktikan saat praktikum. Tujuannya sebagai bukti telah dilakukan kegiatan praktikum.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth, height=0.33\textheight, keepaspectratio]{Dokum Percobaan 1.jpeg}
+  \caption{Dokumentasi Percobaan 1}
+  \label{fig:percobaan1}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth, height=0.33\textheight, keepaspectratio]{Dokum Percobaan 2.jpeg}
+  \caption{Dokumentasi Percobaan 2}
+  \label{fig:percobaan2}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth, height=0.33\textheight, keepaspectratio]{Dokum Percobaan 3a.jpeg}
+  \caption{Rangkaian Percobaan 3a}
+  \label{fig:percobaan3}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth, height=0.33\textheight, keepaspectratio]{Dokum Percobaan 3a low.jpeg}
+  \caption{Rangkaian Percobaan 3a state LOW}
+  \label{fig:percobaan3low}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth, height=0.33\textheight, keepaspectratio]{Dokum percobaan 3a high.jpeg}
+  \caption{Rangkaian Percobaan 3b state HIGH}
+  \label{fig:percobaan3high}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth, height=0.33\textheight, keepaspectratio]{Serial Monitor Percobaan 3a.jpeg}
+  \caption{Serial Monitor Percobaan 3a}
+  \label{fig:serialmonitor3a}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth, height=0.33\textheight, keepaspectratio]{Serial Monitor Percobaan 3b.jpeg}
+  \caption{Serial Monitor Percobaan 3b}
+  \label{fig:serialmonitor3b}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth, height=0.33\textheight, keepaspectratio]{Serial Monitor Percobaan 4.jpeg}
+  \caption{Serial Monitor Percobaan 4}
+  \label{fig:serialmonitor4}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth, height=0.33\textheight, keepaspectratio]{Dokum Percobaan 5.jpeg}
+  \caption{Dokumentasi Percobaan 5}
+  \label{fig:percobaan5}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\textwidth, height=0.33\textheight, keepaspectratio]{Serial Monitor Percobaan 5.jpeg}
+  \caption{Serial Monitor Percobaan 5}
+  \label{fig:serialmonitor5}
+\end{figure}

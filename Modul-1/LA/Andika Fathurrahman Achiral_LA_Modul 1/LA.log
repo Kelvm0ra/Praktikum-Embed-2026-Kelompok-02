@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.5) (preloaded format=pdflatex 2026.11.7)  15 NOV 2026 15:22
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.5) (preloaded format=pdflatex 2026.11.7)  15 NOV 2026 16:44
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -818,49 +818,49 @@ Overfull \hbox (5.3144pt too wide) in paragraph at lines 327--328
  []
 
 [8]
-LaTeX Font Info:    Trying to load font information for TS1+qhv on input line 379.
+LaTeX Font Info:    Trying to load font information for TS1+qhv on input line 378.
  (C:\Users\andik\AppData\Local\Programs\MiKTeX\tex/latex/tex-gyre\ts1qhv.fd
 File: ts1qhv.fd 2009/09/25 v1.2 font definition file for TS1/qhv
 ) [9{C:/Users/andik/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/tex-gyre/q-ts1.enc}]
-Overfull \hbox (6.67853pt too wide) in paragraph at lines 424--425
+Overfull \hbox (6.67853pt too wide) in paragraph at lines 423--424
 \T1/qhv/m/n/10.95 down yang di-pa-sang eks-ter-nal (10k$\OT1/cmr/m/n/10.95 
 $\T1/qhv/m/n/10.95 ) ma-u-pun di-ak-tifk-an in-ter-nal (\T1/cmtt/b/n/10.95 INPUT_PULLUP \T1/qhv/m/n/10.95 dan \T1/cmtt/b/n/10.95 INPUT_PULLDOWN\T1/qhv/m/n/10.95 ).
  []
 
 [10]
-Overfull \hbox (48.45332pt too wide) in paragraph at lines 459--460
+Overfull \hbox (48.45332pt too wide) in paragraph at lines 458--459
 \T1/cmtt/b/n/10.95 counterNoDebounce \T1/qhv/m/n/10.95 yang meng-hi-tung se-ti-ap tran-si-si HI-GH ke LOW se-ca-ra lang-sung, dan \T1/cmtt/b/n/10.95 counterWithDebounce
  []
 
 [11] [12]
-Underfull \hbox (badness 10000) in paragraph at lines 541--542
+Underfull \hbox (badness 10000) in paragraph at lines 540--541
 []|\T1/qhv/m/n/10.95 Terselesaikan
  []
 
 
-Underfull \hbox (badness 2809) in paragraph at lines 542--543
+Underfull \hbox (badness 2809) in paragraph at lines 541--542
 []|\T1/qhv/m/n/10.95 Output ku-rang se-
  []
 
 
-Underfull \hbox (badness 2181) in paragraph at lines 544--545
+Underfull \hbox (badness 2181) in paragraph at lines 543--544
 []|\T1/qhv/m/n/10.95 LDR ti-dak meng-u-
  []
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 552.
+(hyperref)                removing `math shift' on input line 551.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\times' on input line 552.
+(hyperref)                removing `\times' on input line 551.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 552.
+(hyperref)                removing `math shift' on input line 551.
 
 [13]
-Overfull \hbox (9.95012pt too wide) in paragraph at lines 558--566
+Overfull \hbox (9.95012pt too wide) in paragraph at lines 557--565
  [][] 
  []
 
@@ -868,14 +868,69 @@ Overfull \hbox (9.95012pt too wide) in paragraph at lines 558--566
 <Wokwi.png, id=503, 962.59625pt x 506.39188pt>
 File: Wokwi.png Graphic file (type png)
 <use Wokwi.png>
-Package pdftex.def Info: Wokwi.png  used on input line 690.
+Package pdftex.def Info: Wokwi.png  used on input line 689.
 (pdftex.def)             Requested size: 241.84843pt x 127.22353pt.
 
-Overfull \hbox (25.91066pt too wide) in paragraph at lines 697--698
+Overfull \hbox (25.91066pt too wide) in paragraph at lines 696--697
 \T1/qhv/m/n/10.95 (\T1/cmtt/b/n/10.95 lastDebounceTime[r][c]\T1/qhv/m/n/10.95 ) dan sta-tus sta-bil (\T1/cmtt/b/n/10.95 stableState[r][c]\T1/qhv/m/n/10.95 ) ter-sen-di-ri. Sta-tus \T1/cmtt/b/n/10.95 ledState[r][c]
  []
 
-[16 <./Wokwi.png>] [17]) [18] (LA.aux)
+[16 <./Wokwi.png>] [17]
+<Dokum Percobaan 1.jpeg, id=542, 1606.0pt x 1204.5pt>
+File: Dokum Percobaan 1.jpeg Graphic file (type jpg)
+<use Dokum Percobaan 1.jpeg>
+Package pdftex.def Info: Dokum Percobaan 1.jpeg  used on input line 729.
+(pdftex.def)             Requested size: 321.73343pt x 241.30008pt.
+<Dokum Percobaan 2.jpeg, id=543, 1204.5pt x 1606.0pt>
+File: Dokum Percobaan 2.jpeg Graphic file (type jpg)
+<use Dokum Percobaan 2.jpeg>
+Package pdftex.def Info: Dokum Percobaan 2.jpeg  used on input line 736.
+(pdftex.def)             Requested size: 180.97964pt x 241.3062pt.
+ [18 <./Dokum Percobaan 1.jpeg>]
+<Dokum Percobaan 3a.jpeg, id=550, 1606.0pt x 1204.5pt>
+File: Dokum Percobaan 3a.jpeg Graphic file (type jpg)
+<use Dokum Percobaan 3a.jpeg>
+Package pdftex.def Info: Dokum Percobaan 3a.jpeg  used on input line 743.
+(pdftex.def)             Requested size: 321.73343pt x 241.30008pt.
+<Dokum Percobaan 3a low.jpeg, id=551, 1606.0pt x 1204.5pt>
+File: Dokum Percobaan 3a low.jpeg Graphic file (type jpg)
+<use Dokum Percobaan 3a low.jpeg>
+Package pdftex.def Info: Dokum Percobaan 3a low.jpeg  used on input line 750.
+(pdftex.def)             Requested size: 321.73343pt x 241.30008pt.
+ [19 <./Dokum Percobaan 2.jpeg> <./Dokum Percobaan 3a.jpeg>]
+<Dokum percobaan 3a high.jpeg, id=558, 1606.0pt x 1204.5pt>
+File: Dokum percobaan 3a high.jpeg Graphic file (type jpg)
+<use Dokum percobaan 3a high.jpeg>
+Package pdftex.def Info: Dokum percobaan 3a high.jpeg  used on input line 757.
+(pdftex.def)             Requested size: 321.73343pt x 241.30008pt.
+<Serial Monitor Percobaan 3a.jpeg, id=559, 1606.0pt x 738.76pt>
+File: Serial Monitor Percobaan 3a.jpeg Graphic file (type jpg)
+<use Serial Monitor Percobaan 3a.jpeg>
+Package pdftex.def Info: Serial Monitor Percobaan 3a.jpeg  used on input line 764.
+(pdftex.def)             Requested size: 386.94272pt x 177.99364pt.
+ [20 <./Dokum Percobaan 3a low.jpeg> <./Dokum percobaan 3a high.jpeg>]
+<Serial Monitor Percobaan 3b.jpeg, id=566, 1606.0pt x 1204.5pt>
+File: Serial Monitor Percobaan 3b.jpeg Graphic file (type jpg)
+<use Serial Monitor Percobaan 3b.jpeg>
+Package pdftex.def Info: Serial Monitor Percobaan 3b.jpeg  used on input line 771.
+(pdftex.def)             Requested size: 321.73343pt x 241.30008pt.
+<Serial Monitor Percobaan 4.jpeg, id=567, 1606.0pt x 1204.5pt>
+File: Serial Monitor Percobaan 4.jpeg Graphic file (type jpg)
+<use Serial Monitor Percobaan 4.jpeg>
+Package pdftex.def Info: Serial Monitor Percobaan 4.jpeg  used on input line 778.
+(pdftex.def)             Requested size: 321.73343pt x 241.30008pt.
+ [21 <./Serial Monitor Percobaan 3a.jpeg> <./Serial Monitor Percobaan 3b.jpeg>]
+<Dokum Percobaan 5.jpeg, id=574, 1606.0pt x 1204.5pt>
+File: Dokum Percobaan 5.jpeg Graphic file (type jpg)
+<use Dokum Percobaan 5.jpeg>
+Package pdftex.def Info: Dokum Percobaan 5.jpeg  used on input line 785.
+(pdftex.def)             Requested size: 321.73343pt x 241.30008pt.
+<Serial Monitor Percobaan 5.jpeg, id=575, 1606.0pt x 1204.5pt>
+File: Serial Monitor Percobaan 5.jpeg Graphic file (type jpg)
+<use Serial Monitor Percobaan 5.jpeg>
+Package pdftex.def Info: Serial Monitor Percobaan 5.jpeg  used on input line 792.
+(pdftex.def)             Requested size: 321.73343pt x 241.30008pt.
+) [22 <./Serial Monitor Percobaan 4.jpeg> <./Dokum Percobaan 5.jpeg>] [23 <./Serial Monitor Percobaan 5.jpeg>] (LA.aux)
  ***********
 LaTeX2e <2026-06-01>
 L3 programming layer <2026-09-09>
@@ -891,17 +946,17 @@ Package logreq Info: Writing requests to 'LA.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 22866 strings out of 467392
- 398390 string characters out of 5405639
- 1800940 words of memory out of 5000000
- 51546 multiletter control sequences out of 15000+600000
+ 22961 strings out of 467392
+ 401157 string characters out of 5405639
+ 1801524 words of memory out of 5000000
+ 51626 multiletter control sequences out of 15000+600000
  692693 words of font info for 82 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 74i,13n,79p,1670b,2077s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 74i,13n,79p,1661b,2077s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\andik\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt1000.pk> <C:\Users\andik\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt0900.pk> <C:\Users\andik\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt1095.pk><C:/Users/andik/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/andik/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/andik/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/andik/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/andik/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/andik/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/andik/AppData/Local/Programs/MiKTeX/fonts/type1/public/tex-gyre/qhvb.pfb><C:/Users/andik/AppData/Local/Programs/MiKTeX/fonts/type1/public/tex-gyre/qhvbi.pfb><C:/Users/andik/AppData/Local/Programs/MiKTeX/fonts/type1/public/tex-gyre/qhvr.pfb><C:/Users/andik/AppData/Local/Programs/MiKTeX/fonts/type1/public/tex-gyre/qhvri.pfb>
-Output written on LA.pdf (19 pages, 658613 bytes).
+Output written on LA.pdf (24 pages, 3182043 bytes).
 PDF statistics:
- 832 PDF objects out of 1000 (max. 8388607)
- 388 named destinations out of 1000 (max. 500000)
- 189 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 876 PDF objects out of 1000 (max. 8388607)
+ 403 named destinations out of 1000 (max. 500000)
+ 239 words of extra memory for PDF output out of 10000 (max. 10000000)
 

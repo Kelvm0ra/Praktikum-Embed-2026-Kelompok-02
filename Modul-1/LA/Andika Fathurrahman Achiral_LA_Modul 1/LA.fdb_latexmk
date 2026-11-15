@@ -1,11 +1,11 @@
 # Fdb version 4
-["biber LA"] 1794730615.72179 "LA.bcf" "LA.bbl" "LA" 1794730946.95792 0
-  "LA.bcf" 1794730945 107302 9980f193ed7cc2429579111e76280db7 "pdflatex"
+["biber LA"] 0 "LA.bcf" "LA.bbl" "LA" 1794735873.93695 -1
+  "LA.bcf" 1794735873 107302 9980f193ed7cc2429579111e76280db7 "pdflatex"
   (generated)
   "LA.bbl"
   "LA.blg"
   (rewritten before read)
-["pdflatex"] 1794730937.96513 "c:/Users/andik/Downloads/Praktikum-Embed-2026-Kelompok-02/Modul-1/LA/Andika Fathurrahman Achiral_LA_Modul 1/LA.tex" "LA.pdf" "LA" 1794730946.96002 0
+["pdflatex"] 1794735870.23426 "c:/Users/andik/Downloads/Praktikum-Embed-2026-Kelompok-02/Modul-1/LA/Andika Fathurrahman Achiral_LA_Modul 1/LA.tex" "LA.pdf" "LA" 1794735873.93841 0
   "C:/Users/andik/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1794586832 121421 986c656c18d5dae14116b93751df729f ""
   "C:/Users/andik/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/ectt0900.pk" 1794586387 17512 4c9c1cd62e7cea66bae8fe38b546a0f4 ""
   "C:/Users/andik/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/ectt1000.pk" 1794621201 20028 5726ac9250e311e04f01d155b196be64 ""
@@ -147,12 +147,22 @@
   "Cover/Header.tex" 1794015837 817 f8f63a9414afeaaa15ca8f85d4f4ef04 ""
   "Cover/img/b401.png" 1794015837 43413 9a2fd61537067ffecada807204a078df ""
   "Cover/img/logodepart.png" 1794015837 37002 0f7871c228b1de42912bcfe0dae05fc4 ""
-  "LA.aux" 1794730945 6891 2b06a3e1020348f17b027e0c63fd631c "pdflatex"
-  "LA.bbl" 1794730623 0 d41d8cd98f00b204e9800998ecf8427e "biber LA"
-  "LA.out" 1794730945 5707 e4052f16ced63cf7b55093047198e574 "pdflatex"
-  "LA.run.xml" 1794730945 2276 806fa917134bf096fadbd6a2548269f0 "pdflatex"
+  "Dokum Percobaan 1.jpeg" 1794587053 242549 14cb1c852105f39078cf5f31a17109a1 ""
+  "Dokum Percobaan 2.jpeg" 1794731698 224385 1018a454d2c1ae890b23ec13b7d05e1b ""
+  "Dokum Percobaan 3a low.jpeg" 1794731754 282923 4bc50ed6906dd5058fbcd5e8daeb56c2 ""
+  "Dokum Percobaan 3a.jpeg" 1794731728 272417 8649e185902bbd64e404409aee578f55 ""
+  "Dokum Percobaan 5.jpeg" 1794733157 311652 59dd7d4184901e45fb71f7d0aae996d3 ""
+  "Dokum percobaan 3a high.jpeg" 1794731770 296984 01d116d345ee9a84c211c743d1346931 ""
+  "LA.aux" 1794735873 9234 fbef3308f98b2007ab998d118b0a4825 "pdflatex"
+  "LA.bbl" 1794734502 0 d41d8cd98f00b204e9800998ecf8427e "biber LA"
+  "LA.out" 1794735873 5707 e4052f16ced63cf7b55093047198e574 "pdflatex"
+  "LA.run.xml" 1794735873 2276 806fa917134bf096fadbd6a2548269f0 "pdflatex"
   "LA.tex" 1794586780 2781 5f433a680ff6aa5e2fc4f93c47ddad60 ""
-  "P1/pengenalan.tex" 1794730935 45464 a406fef2ccbe804b9bfaf8e2a88b5794 ""
+  "P1/pengenalan.tex" 1794735865 47423 d883fa9670fe86c5a28e61213bb38083 ""
+  "Serial Monitor Percobaan 3a.jpeg" 1794731811 103230 026471dafdacf6500c080c2e110132ab ""
+  "Serial Monitor Percobaan 3b.jpeg" 1794731839 324002 1f3296ce13699b05a838df259f7aa6d4 ""
+  "Serial Monitor Percobaan 4.jpeg" 1794733102 227903 11929faafdc3015c7d5de99409f96561 ""
+  "Serial Monitor Percobaan 5.jpeg" 1794733122 229768 39b2188d5ae80c9a21288ef12e299ef5 ""
   "Wokwi.png" 1794648953 353395 35b13f1aec021db715e37010847c5c6f ""
   "b401.png" 1794015837 43413 9a2fd61537067ffecada807204a078df ""
   "c:/Users/andik/Downloads/Praktikum-Embed-2026-Kelompok-02/Modul-1/LA/Andika Fathurrahman Achiral_LA_Modul 1/LA.tex" 1794586780 2781 5f433a680ff6aa5e2fc4f93c47ddad60 ""
