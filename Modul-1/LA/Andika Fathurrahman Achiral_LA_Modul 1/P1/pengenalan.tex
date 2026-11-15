@@ -364,10 +364,360 @@ void loop() {
 \end{lstlisting}
 
 \section{Analisis Hasil Percobaan}
-Berisi pembahasan terhadap hasil yang diperoleh selama praktikum. Analisis dilakukan dengan membandingkan hasil percobaan terhadap teori, serta mengidentifikasi faktor-faktor yang memengaruhi hasil, seperti kesalahan alat atau langkah percobaan. Tujuan bagian ini adalah untuk mengevaluasi keberhasilan percobaan dan memastikan pemahaman praktikan terkait praktikum yang telah dilaksanakan.
+\providecommand{\isi}[1]{\textcolor{red}{\textbf{[ISI: #1]}}}
+
+\subsection{Percobaan 1: Blink pada STM32 Blackpill}
+
+Percobaan ini bertujuan memastikan board STM32 Blackpill dapat diprogram melalui ST-Link menggunakan framework Arduino (STM32duino). Secara teori, LED onboard pada pin PC13 bersifat aktif LOW, sehingga LED menyala ketika \texttt{digitalWrite(LED\_PIN, LOW)} dan padam ketika HIGH. Dengan \texttt{delay(500)} pada kedua kondisi, LED seharusnya menyala 0{,}5 detik dan padam 0{,}5 detik secara bergantian, yaitu periode 1 detik (frekuensi 1 Hz).
+
+\textbf{Hasil.} LED PC13 berkedip sesuai dengan program setelah build dan flash berhasil ke Blackpill. 
+
+\textbf{Perbandingan dengan teori.} Apabila LED berkedip dengan periode sekitar 1 detik, hasil sesuai dengan teori. Keberhasilan ini juga menunjukkan bahwa jalur SWD (SWDIO, SWCLK, GND, dan 3{,}3 V) terhubung dengan benar dan proses flashing berhasil. Karena Blackpill tidak memiliki programmer onboard, keberhasilan unggah program sepenuhnya bergantung pada ST-Link. Sifat aktif LOW hanya menentukan fase nyala dan padam, bukan periode kedipan.
+
+\textbf{Faktor yang memengaruhi hasil:}
+\begin{itemize}
+  \item Kesalahan wiring ST-Link. Letak pin pada ST-Link berbeda-beda sehingga SWDIO dan SWCLK mudah tertukar, yang membuat target tidak terdeteksi saat upload.
+  \item Tegangan ST-Link tidak sesuai. Target bekerja pada 3{,}3 V sehingga ST-Link harus diatur pada tegangan tersebut.
+  \item Driver ST-Link belum terpasang atau kabel USB hanya mendukung pengisian daya, bukan data.
+  \item Konfigurasi \texttt{platformio.ini} tidak sesuai dengan board, atau proses \textit{refresh} PlatformIO belum selesai saat Build/Upload ditekan sehingga konfigurasi lama masih terpakai.
+\end{itemize}
+
+% ---------------------------------------------------------------------
+\subsection{Percobaan 2: Blink pada ESP32 dengan Framework ESP-IDF}
+
+Pada percobaan ini ESP32 diprogram menggunakan ESP-IDF dengan titik masuk \texttt{app\_main()}. LED onboard pada GPIO~2 bersifat aktif HIGH, sehingga \texttt{gpio\_set\_level(LED\_PIN, 1)} menyalakan LED dan nilai 0 mematikannya. Penundaan dilakukan dengan \texttt{vTaskDelay(pdMS\_TO\_TICKS(500))}, sehingga LED diharapkan berkedip dengan periode 1 detik. Berbeda dengan Blackpill, ESP32 dapat diunggah langsung melalui kabel USB karena board memiliki chip USB-to-Serial.
+
+\textbf{Hasil.} LED GPIO berkedip dengan periode sekitar 1 detik. Lama Build cukup lama tapi tidak terdokumentasi sekitar beberapa menit, sedangkan upload atau flash memakan waktu 15 detik tanpa ada kendala.
+
+\textbf{Perbandingan dengan teori.} Hasil yang sesuai teori menunjukkan bahwa toolchain ESP-IDF di PlatformIO berfungsi dan jalur USB-to-Serial bekerja. Perbandingan penulisan program pada Arduino dan ESP-IDF dirangkum pada Tabel~\ref{tab:arduino-idf}.
+
+\begin{table}[H]
+  \centering
+  \caption{Perbandingan pemrograman Blink dengan Arduino dan ESP-IDF}
+  \label{tab:arduino-idf}
+  \begin{tabular}{|l|l|l|}
+    \hline
+    Aspek & Arduino & ESP-IDF \\
+    \hline
+    Titik masuk & \texttt{setup()}, \texttt{loop()} & \texttt{app\_main()} \\
+    Mode pin & \texttt{pinMode()} & \texttt{gpio\_set\_direction()} \\
+    Tulis level & \texttt{digitalWrite()} & \texttt{gpio\_set\_level()} \\
+    Penundaan & \texttt{delay(ms)} & \texttt{vTaskDelay()} \\
+    Berkas utama & \texttt{main.cpp} & \texttt{main.c} \\
+    \hline
+  \end{tabular}
+\end{table}
+
+Pada ESP-IDF, program lebih eksplisit karena pustaka FreeRTOS dan driver GPIO harus di-\textit{include} dan pin perlu direset serta diatur arahnya secara terpisah. Sebagai imbalannya, ESP-IDF memberi akses langsung ke fasilitas RTOS seperti \textit{task}, \textit{semaphore}, dan \textit{queue}. Penundaan dengan \texttt{vTaskDelay()} berbasis \textit{tick} FreeRTOS sehingga penjadwal dapat menjalankan \textit{task} lain selama menunggu. Arduino lebih ringkas dan cocok untuk program sederhana, tetapi tingkat abstraksinya lebih tinggi.
+
+\textbf{Faktor yang memengaruhi hasil:}
+\begin{itemize}
+  \item Port serial tidak terdeteksi karena driver CP2102/CH340 belum terpasang atau kabel USB hanya untuk pengisian daya.
+  \item Pada sebagian board, mode \textit{download} perlu dipicu dengan menahan tombol BOOT saat proses upload.
+  \item Pin LED onboard dapat berbeda antar varian board. Bila LED tidak berkedip, gunakan LED eksternal dengan resistor 220\,$\Omega$.
+  \item Build pertama memakan waktu lama karena framework dan toolchain diunduh dan dikompilasi, sehingga perlu menunggu hingga selesai.
+\end{itemize}
+
+% ---------------------------------------------------------------------
+\subsection{Percobaan 3: Pull-up dan Pull-down, Eksternal vs Internal}
+
+Percobaan ini membandingkan pembacaan dua pushbutton menggunakan resistor pull-up dan pull-down yang dipasang eksternal (10\,k$\Omega$) maupun diaktifkan internal (\texttt{INPUT\_PULLUP} dan \texttt{INPUT\_PULLDOWN}). Menurut teori, pin dengan pull-up bernilai HIGH saat tombol tidak ditekan dan LOW saat ditekan, sedangkan pull-down bernilai sebaliknya.
+
+\textbf{Hasil.} Hasil pengamatan dirangkum pada Tabel~\ref{tab:p3}.
+
+\begin{table}[H]
+  \centering
+  \caption{Logika pin pada percobaan pull-up dan pull-down}
+  \label{tab:p3}
+  \begin{tabular}{|l|l|c|c|c|}
+    \hline
+    Konfigurasi & Kondisi tombol & Teori & Eksternal & Internal \\
+    \hline
+    Pull-up (GPIO 32)   & Tidak ditekan & HIGH & H & H \\
+    Pull-up (GPIO 32)   & Ditekan       & LOW  & L & L \\
+    Pull-down (GPIO 33) & Tidak ditekan & LOW  & L & L \\
+    Pull-down (GPIO 33) & Ditekan       & HIGH & H & H \\
+    \hline
+  \end{tabular}
+\end{table}
+
+\textbf{Perbandingan dengan teori.} Pembacaan pada \textit{Serial Monitor} ditampilkan sebagai ``DITEKAN'' atau ``TIDAK DITEKAN'' dengan menyesuaikan logikanya (pull-up dianggap ditekan saat LOW, pull-down saat HIGH). Oleh karena itu teks keluaran pada konfigurasi eksternal dan internal seharusnya identik, walaupun level tegangan fisik kedua pin saling berlawanan. Kesamaan hasil menunjukkan bahwa resistor pull internal ESP32 berfungsi setara dengan resistor eksternal untuk tujuan logika. Kedua pin yang dipakai (GPIO 32 dan 33) mendukung resistor pull internal, sesuai dengan teori bahwa hanya GPIO 34--39 yang tidak memilikinya.
+
+Perbedaan keduanya terletak pada karakteristik listrik dan kepraktisan. Resistor internal bernilai lebih besar daripada 10\,k$\Omega$ sehingga tarikannya lebih lemah dan lebih rentan terhadap noise, tetapi tidak memerlukan komponen tambahan dan mengurangi risiko salah wiring. Resistor eksternal 10\,k$\Omega$ menarik lebih kuat dengan arus saat tombol ditekan sebesar $3{,}3\ \mathrm{V} / 10\ \mathrm{k}\Omega = 0{,}33\ \mathrm{mA}$, yang masih sangat kecil. Resistor eksternal tetap wajib digunakan pada pin input-only.
+
+\textbf{Faktor yang memengaruhi hasil:}
+\begin{itemize}
+  \item Resistor eksternal tidak dilepas saat menguji konfigurasi internal, sehingga kedua resistor bekerja bersamaan dan hasil menyimpang.
+  \item Salah memilih pasangan kaki pushbutton empat kaki. Bila kaki yang dipakai adalah pasangan yang selalu terhubung, tombol terbaca selalu ditekan.
+  \item Kontak breadboard atau kabel jumper longgar sehingga pembacaan tidak stabil.
+  \item Program membaca pin setiap 200 ms (\texttt{delay(200)}), sehingga tekanan yang lebih singkat dari itu dapat terlewat.
+\end{itemize}
+
+% ---------------------------------------------------------------------
+\subsection{Percobaan 4: Debouncing pada Input Tombol}
+
+Percobaan ini membandingkan dua penghitung pada satu tombol di GPIO~25 dengan \texttt{INPUT\_PULLUP}: \texttt{counterNoDebounce} yang menghitung setiap transisi HIGH ke LOW secara langsung, dan \texttt{counterWithDebounce} yang hanya menghitung bila sinyal stabil lebih lama dari \texttt{DEBOUNCE\_DELAY}. Secara teori, kontak mekanik memantul sesaat saat bersentuhan sehingga satu tekanan dapat tercatat beberapa kali oleh penghitung tanpa debouncing, sedangkan penghitung dengan debouncing bertambah tepat satu.
+
+\textbf{Hasil.} Pengamatan untuk tiga nilai \texttt{DEBOUNCE\_DELAY} dirangkum pada Tabel~\ref{tab:p4}.
+
+\begin{table}[H]
+  \centering
+  \caption{Perbandingan penghitung pada berbagai nilai \texttt{DEBOUNCE\_DELAY}}
+  \label{tab:p4}
+  \begin{tabular}{|c|c|c|c|c|}
+    \hline
+    Delay (ms) & Jumlah tekanan & Tanpa debounce & Dengan debounce & Respons \\
+    \hline
+    10  & 1 & 1 & 0 & cepat \\
+    50  & 2 & 2 & 1 & cepat \\
+    200 & 3 & 3 & 3 & lambat \\
+    \hline
+  \end{tabular}
+\end{table}
+
+\textbf{Perbandingan dengan teori.} Pada \texttt{DEBOUNCE\_DELAY} 50 ms, \texttt{counterNoDebounce} dapat bertambah lebih dari satu untuk satu tekanan, sedangkan \texttt{counterWithDebounce} bertambah tepat satu. Bila kedua nilai terlihat sama pada beberapa tekanan, itu tidak berarti program salah, karena getaran kontak tidak selalu muncul pada setiap tekanan. Mekanisme debouncing bekerja dengan menyimpan waktu setiap perubahan sinyal mentah (\texttt{lastDebounceTime}). Keadaan baru diterima hanya jika sinyal tidak berubah selama lebih dari \texttt{DEBOUNCE\_DELAY}. Akibatnya, setiap tekanan baru dihitung setelah tertunda sebesar nilai tersebut.
+
+Pengaruh nilai \texttt{DEBOUNCE\_DELAY} menunjukkan adanya \textit{trade-off}. Nilai 10 ms dapat terlalu singkat bila durasi bouncing tombol lebih lama dari itu, sehingga sebagian pantulan masih lolos dan penghitung ganda masih mungkin terjadi. Nilai 50 ms umumnya cukup untuk menyaring getaran, sementara respons masih terasa instan bagi pengguna. Nilai 200 ms sangat bersih dari getaran, tetapi tekanan beruntun yang jaraknya kurang dari 200 ms tidak terhitung sehingga \texttt{counterWithDebounce} lebih kecil daripada jumlah tekanan sebenarnya dan tombol terasa lambat.
+
+\textbf{Faktor yang memengaruhi hasil:}
+\begin{itemize}
+  \item Kualitas dan usia pushbutton. Tombol yang aus atau murah cenderung memiliki bouncing lebih lama.
+  \item Cara menekan. Tekanan cepat dan tegas berbeda dengan tekanan pelan dan ragu-ragu yang cenderung menghasilkan lebih banyak pantulan.
+  \item Pull-up internal yang lebih lemah dan kabel jumper yang longgar membuat sinyal lebih rentan terhadap noise.
+  \item Jumlah tekanan yang dicatat secara manual dapat meleset dari jumlah tekanan sebenarnya, terutama pada tekanan cepat berulang.
+\end{itemize}
+
+% ---------------------------------------------------------------------
+\subsection{Percobaan 5: Pembacaan ADC dengan LDR}
+
+Pada percobaan ini LDR dirangkai sebagai pembagi tegangan dengan resistor $R_1 = 10\ \mathrm{k}\Omega$, dengan LDR terhubung ke 3{,}3 V dan $R_1$ ke GND. Tegangan pada titik tengah yang dibaca GPIO~34 adalah
+\begin{equation}
+  V_o = V_{\mathrm{in}} \, \frac{R_1}{R_{\mathrm{LDR}} + R_1}, \qquad V_{\mathrm{in}} = 3{,}3\ \mathrm{V}.
+\end{equation}
+Ketika cahaya meningkat, resistansi LDR turun sehingga $V_o$ naik, dan nilai mentah ADC ikut naik. Sebaliknya, saat LDR ditutup, resistansinya naik sehingga $V_o$ dan nilai ADC turun. Sebagai gambaran, bila $R_{\mathrm{LDR}} = 10\ \mathrm{k}\Omega$ maka $V_o = 1{,}65\ \mathrm{V}$ dan nilai mentah ADC sekitar 2048 (ADC 12-bit, 0 sampai 4095).
+
+\textbf{Hasil.} Pembacaan pada berbagai kondisi cahaya dirangkum pada Tabel~\ref{tab:p5}.
+
+\begin{table}[H]
+  \centering
+  \caption{Pembacaan ADC LDR pada GPIO 34}
+  \label{tab:p5}
+  \begin{tabular}{|l|c|c|c|}
+    \hline
+    Kondisi cahaya & $R_{\mathrm{LDR}}$ (teori) & ADC mentah & Tegangan (V) \\
+    \hline
+    Ditutup tangan   & Besar  & 0 & 0 \\
+    Ruangan normal   & Sedang & 0 & 0 \\
+    Disinari lampu   & Kecil  & 0 & 0 \\
+    \hline
+  \end{tabular}
+\end{table}
+
+\textbf{Perbandingan dengan teori.} Pola yang diharapkan adalah nilai ADC terendah saat LDR ditutup dan tertinggi saat disinari lampu, dengan konversi tegangan $V = \mathrm{ADC} \times 3{,}3/4095$. Pada digital input, pin hanya dibandingkan dengan ambang logika sehingga berapa pun tegangan di antara kedua level hanya menghasilkan HIGH atau LOW, yaitu dua kondisi. Pada analog input, ADC 12-bit membagi rentang 0 sampai 3{,}3 V menjadi 4096 level dengan resolusi sekitar 0{,}805 mV per langkah. Itulah sebabnya perubahan intensitas cahaya yang halus dapat direpresentasikan sebagai nilai yang berbeda-beda, bukan hanya dua kondisi.
+
+\textbf{Faktor yang memengaruhi hasil:}
+\begin{itemize}
+  \item ADC ESP32 tidak sepenuhnya linier dan cukup berisik, terutama mendekati 0 V dan 3{,}3 V. Karena itu nilai mentah jarang mencapai tepat 0 atau 4095, bahkan pada kondisi sangat gelap atau sangat terang.
+  \item Tegangan 3V3 yang sebenarnya dapat sedikit berbeda dari 3{,}3 V (misalnya bergantung pada catu daya USB), sehingga konversi tegangan hanya berupa perkiraan.
+  \item Toleransi resistor 10\,k$\Omega$ dan karakteristik LDR yang bervariasi antar komponen.
+  \item Intensitas cahaya ruangan yang berfluktuasi (bayangan, kedipan lampu) serta pembacaan tanpa perataan (\textit{averaging}) setiap 300 ms.
+  \item Pemilihan GPIO~34 pada ADC1 sudah tepat karena ADC2 dapat bermasalah saat WiFi aktif, meskipun WiFi tidak digunakan pada percobaan ini.
+\end{itemize}
+
+% ---------------------------------------------------------------------
+\subsection{Evaluasi Keseluruhan}
+
+Keberhasilan masing-masing percobaan dirangkum pada Tabel~\ref{tab:evaluasi}.
+
+\begin{table}[H]
+  \centering
+  \caption{Evaluasi keberhasilan percobaan Modul 1}
+  \label{tab:evaluasi}
+  \begin{tabular}{|c|p{0.37\linewidth}|p{0.2\linewidth}|p{0.2\linewidth}|}
+    \hline
+    No & Tujuan & Status & Keterangan \\
+    \hline
+    1 & Flashing Blink ke STM32 via ST-Link & Berhasil & Terselesaikan \\
+    2 & Blink ESP32 dengan ESP-IDF & Berhasil & Terselesaikan dengan sedikit kendala waktu Build \\
+    3 & Pull-up/pull-down eksternal vs internal & Setengah Berhasil & Output kurang sesuai \\
+    4 & Debouncing tombol & Setengah Berhasil & Kekurangan data \\
+    5 & Pembacaan ADC dengan LDR & Setengah berhasil & LDR tidak mengubah output \\
+    \hline
+  \end{tabular}
+\end{table}
+
+Secara keseluruhan, praktikum ini memperlihatkan tiga mode akses GPIO: \textit{digital output} (Percobaan 1 dan 2), \textit{digital input} (Percobaan 3 dan 4), serta \textit{analog input} (Percobaan 5). Hasil percobaan yang sesuai dengan teori menunjukkan bahwa perbedaan programmer dan framework (ST-Link dengan Arduino pada STM32, USB-to-Serial dengan ESP-IDF pada ESP32), konfigurasi pull-up/pull-down, penanganan bouncing, dan konversi ADC telah dipahami dan dapat diterapkan. Ketidaksesuaian yang muncul pada praktikum, bila ada, sebagian besar bersumber dari wiring, konfigurasi \texttt{platformio.ini}, dan karakteristik komponen nyata yang tidak ideal, sebagaimana diuraikan pada tiap percobaan.
 
 \section{Hasil Tugas Modul}
-Bagian ini memuat hasil dari pengerjaan tugas tambahan yang diberikan dalam modul praktikum serta penjelasan dari jawaban tersebut. 
+\subsection{Perancangan Rangkaian dan Simulasi Matrix $3\times 3$}
+Pada tugas modul ini dirancang sistem kendali **Matrix LED $3\times 3$** menggunakan **Matrix Pushbutton $3\times 3$** berbasis mikrokontroler **ESP32**. Setiap tombol pada posisi koordinat $(baris, kolom)$ mengendalikan perubahan status nyala/mati (\textit{toggle}) LED pada posisi koordinat yang sama.
+
+\begin{table}[h!]
+\centering
+\caption{Konfigurasi Pin ESP32 untuk Matrix Pushbutton $3\times 3$ dan Matrix LED $3\times 3$}
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{Kelompok Pin} & \textbf{Label Matrix} & \textbf{Pin ESP32} & \textbf{Mode / Keterangan} \\ \hline
+Baris Tombol 1--3 & \texttt{BTN\_R1, BTN\_R2, BTN\_R3} & GPIO 13, 14, 27 & Pemindai baris aktif \texttt{LOW} \\ \hline
+Kolom Tombol 1--3 & \texttt{BTN\_C1, BTN\_C2, BTN\_C3} & GPIO 26, 25, 33 & \texttt{INPUT\_PULLUP} internal \\ \hline
+Baris LED 1--3 (Anoda) & \texttt{LED\_R1, LED\_R2, LED\_R3} & GPIO 18, 19, 21 & \texttt{OUTPUT} (aktif \texttt{HIGH}) \\ \hline
+Kolom LED 1--3 (Katoda) & \texttt{LED\_C1, LED\_C2, LED\_C3} & GPIO 22, 23, 4 & \texttt{OUTPUT} via resistor $220\,\Omega$ \\ \hline
+\end{tabular}
+\end{table}
+
+\noindent \textbf{Kode Program Simulasi (ESP32 + Framework Arduino):}
+\begin{lstlisting}[language=C++, basicstyle=\ttfamily\footnotesize, breaklines=true, frame=single]
+#include <Arduino.h>
+
+#define ROWS 3
+#define COLS 3
+#define DEBOUNCE_DELAY 50 // ms (mengacu pada Percobaan 4)
+
+// Pin Matrix Pushbutton 3x3
+const int btnRowPins[ROWS] = {13, 14, 27};
+const int btnColPins[COLS] = {26, 25, 33};
+
+// Pin Matrix LED 3x3 (Anoda = Baris, Katoda = Kolom + Resistor 220 Ohm)
+const int ledRowPins[ROWS] = {18, 19, 21};
+const int ledColPins[COLS] = {22, 23, 4};
+
+// Variabel Debouncing untuk masing-masing tombol (3x3)
+int lastFlickerableState[ROWS][COLS];
+int stableState[ROWS][COLS];
+unsigned long lastDebounceTime[ROWS][COLS];
+
+// Status nyala/mati tiap LED (3x3)
+bool ledState[ROWS][COLS];
+
+void setup() {
+  Serial.begin(115200);
+
+  // Inisialisasi pin baris tombol sebagai INPUT (Hi-Z saat tidak dipindai)
+  for (int r = 0; r < ROWS; r++) {
+    pinMode(btnRowPins[r], INPUT);
+  }
+
+  // Inisialisasi pin kolom tombol dengan pull-up internal ESP32
+  for (int c = 0; c < COLS; c++) {
+    pinMode(btnColPins[c], INPUT_PULLUP);
+  }
+
+  // Inisialisasi pin Matrix LED
+  for (int r = 0; r < ROWS; r++) {
+    pinMode(ledRowPins[r], OUTPUT);
+    digitalWrite(ledRowPins[r], LOW);
+  }
+  for (int c = 0; c < COLS; c++) {
+    pinMode(ledColPins[c], OUTPUT);
+    digitalWrite(ledColPins[c], HIGH); // Matikan kolom (katoda HIGH)
+  }
+
+  // Inisialisasi state awal seluruh tombol dan LED
+  for (int r = 0; r < ROWS; r++) {
+    for (int c = 0; c < COLS; c++) {
+      lastFlickerableState[r][c] = HIGH;
+      stableState[r][c] = HIGH;
+      lastDebounceTime[r][c] = 0;
+      ledState[r][c] = false;
+    }
+  }
+}
+
+void scanButtons() {
+  for (int r = 0; r < ROWS; r++) {
+    // Aktifkan satu baris dengan menariknya ke LOW
+    pinMode(btnRowPins[r], OUTPUT);
+    digitalWrite(btnRowPins[r], LOW);
+    delayMicroseconds(10);
+
+    for (int c = 0; c < COLS; c++) {
+      int reading = digitalRead(btnColPins[c]);
+
+      // Deteksi perubahan sinyal mentah (mulai hitung waktu debounce)
+      if (reading != lastFlickerableState[r][c]) {
+        lastDebounceTime[r][c] = millis();
+      }
+
+      // Validasi kestabilan sinyal setelah melewati DEBOUNCE_DELAY (50 ms)
+      if ((millis() - lastDebounceTime[r][c]) > DEBOUNCE_DELAY) {
+        if (reading != stableState[r][c]) {
+          stableState[r][c] = reading;
+
+          // Ubah status LED hanya saat tombol stabil ditekan (LOW)
+          if (stableState[r][c] == LOW) {
+            ledState[r][c] = !ledState[r][c];
+            Serial.printf("Tombol (%d,%d) ditekan -> LED (%d,%d): %s\n",
+                          r + 1, c + 1, r + 1, c + 1,
+                          ledState[r][c] ? "MENYALA" : "MATI");
+          }
+        }
+      }
+      lastFlickerableState[r][c] = reading;
+    }
+
+    // Kembalikan baris ke mode INPUT (Hi-Z) sebelum pindah ke baris berikutnya
+    pinMode(btnRowPins[r], INPUT);
+  }
+}
+
+void refreshLedMatrix() {
+  for (int r = 0; r < ROWS; r++) {
+    // Matikan semua baris terlebih dahulu untuk mencegah ghosting
+    for (int i = 0; i < ROWS; i++) {
+      digitalWrite(ledRowPins[i], LOW);
+    }
+
+    // Atur logika kolom untuk baris r yang sedang aktif
+    for (int c = 0; c < COLS; c++) {
+      digitalWrite(ledColPins[c], ledState[r][c] ? LOW : HIGH);
+    }
+
+    // Nyalakan baris r secara singkat (multiplexing)
+    digitalWrite(ledRowPins[r], HIGH);
+    delay(2);
+    digitalWrite(ledRowPins[r], LOW);
+  }
+}
+
+void loop() {
+  scanButtons();
+  refreshLedMatrix();
+}
+\end{lstlisting}
+
+\begin{figure}[h!]
+\centering
+% Ganti 'simulasi_matrix_3x3.png' dengan nama file tangkapan layar Wokwi Anda
+\fbox{\parbox{0.85\textwidth}{\centering \vspace{2.5cm} Wokwi.png \vspace{2.5cm}}}
+\caption{Hasil simulasi rangkaian Matrix Pushbutton $3\times 3$ mengendalikan Matrix LED $3\times 3$ pada Wokwi}
+\end{figure}
+
+\noindent \textbf{Penjelasan Cara Kerja Sistem:}
+\begin{itemize}
+    \item \textbf{Pemindaian Matrix Tombol (\textit{Scanning}):} Mikrokontroler mengaktifkan satu baris tombol ke logika \texttt{LOW} secara bergantian sementara baris lainnya diatur ke mode impedansi tinggi (\texttt{INPUT}), lalu membaca status ketiga kolom (\texttt{INPUT\_PULLUP})[cite: 1].
+    \item \textbf{Debouncing Independen per Tombol:} Setiap koordinat $(r,c)$ memiliki variabel pencatat waktu (\texttt{lastDebounceTime[r][c]}) dan status stabil (\texttt{stableState[r][c]}) tersendiri. Status \texttt{ledState[r][c]} hanya berubah apabila pembacaan tombol bertahan stabil selama lebih dari $50\text{ ms}$[cite: 1].
+    \item \textbf{Multiplexing Matrix LED:} Tampilan LED $3\times 3$ diperbarui baris demi baris dengan jeda $2\text{ ms}$ per baris ($\approx 166\text{ Hz}$ per siklus penuh), sehingga LED pada koordinat yang aktif tampak menyala kontinu tanpa kedipan.
+\end{itemize}
+
+\subsection{Jawaban Pertanyaan Analisis}
+\begin{enumerate}
+    \item \textbf{Urgensi Debouncing pada Rangkaian Matrix Pushbutton:} \\
+    Meskipun pada satu waktu hanya satu tombol yang ditekan oleh pengguna[cite: 1], proses \textit{debouncing} tetap wajib diterapkan karena sumber permasalahan \textit{bouncing} berasal dari sifat fisik kontak mekanik di dalam tombol itu sendiri[cite: 1, 5, 7]. Ketika pelat logam di dalam \textit{pushbutton} beradu atau terlepas, terjadi pantulan mekanik selama beberapa milidetik yang menghasilkan serangkaian pulsa transisi \texttt{HIGH}--\texttt{LOW} berulang secara cepat[cite: 1, 5, 7]. Karena siklus pemindaian mikrokontroler berlangsung dalam orde mikrodetik hingga milidetik, satu kali penekanan tombol tanpa \textit{debouncing} akan terbaca sebagai beberapa kali penekanan berturut-turut, sehingga status LED pada koordinat $(r,c)$ akan berkedip atau berubah secara acak[cite: 1, 5].
+
+    \item \textbf{Konfigurasi Pull-up pada Pembacaan Kolom dan Bahaya Kondisi Floating:} \\
+    Pada rancangan matrix di atas, pin kolom tombol menggunakan konfigurasi \textbf{pull-up internal} (\texttt{INPUT\_PULLUP}) pada ESP32[cite: 1, 5].
+    \begin{itemize}
+        \item \textbf{Kondisi Saat Tidak Ditekan:} Pin kolom terhubung ke sumber tegangan referensi $3.3\text{ V}$ melalui resistor \textit{pull-up} internal, sehingga terbaca berlogika \textbf{HIGH}[cite: 1, 5]. Ketika tombol pada baris yang sedang dipindai (\texttt{LOW}) ditekan, jalur rangkaian tertutup menuju \texttt{LOW} sehingga pin kolom terbaca \textbf{LOW}[cite: 1, 5].
+        \item \textbf{Alasan Tidak Boleh Dibiarkan Floating:} Jika pin kolom dibiarkan tanpa resistor \textit{pull-up} maupun \textit{pull-down}, saat tombol tidak ditekan pin input berada dalam keadaan terbuka (\textit{floating}) tanpa referensi tegangan yang pasti[cite: 1, 5]. Akibatnya, kapasitansi parasitik jalur kabel dan interferensi elektromagnetik (\textit{noise}) dari lingkungan sekitar dapat memicu perubahan tegangan acak antara \texttt{HIGH} dan \texttt{LOW}, yang menyebabkan pembacaan tombol palsu (\textit{false trigger}) pada matrix[cite: 1, 5].
+    \end{itemize}
+
+    \item \textbf{Perbedaan Pembacaan GPIO Digital Input vs Analog Input (ADC):} \\
+    Apabila salah satu posisi pada matrix digantikan oleh sensor LDR yang dibaca melalui pin ADC (seperti GPIO 34 pada Percobaan 5)[cite: 1, 6], terdapat perbedaan mendasar dalam cara mikrokontroler menginterpretasikan sinyal:
+    \begin{itemize}
+        \item \textbf{Digital Input (Tombol):} Rangkaian antarmuka digital hanya membandingkan tegangan masukan terhadap ambang batas tegangan logika tertentu ($V_{IL}$ dan $V_{IH}$), sehingga sinyal hanya dikelompokkan menjadi dua kondisi biner diskrit, yakni \textbf{LOW} ($0$) atau \textbf{HIGH} ($1$)[cite: 1, 4, 5].
+        \item \textbf{Analog Input (ADC):} Peripheral \textit{Analog-to-Digital Converter} (ADC) mengukur besar tegangan masukan kontinu ($0\text{ V}$ hingga $3.3\text{ V}$) melalui tiga tahapan: pencuplikan (\textit{sampling}), kuantisasi ke dalam tingkat tegangan diskrit, dan pengkodean biner[cite: 1, 6, 7]. Karena ADC internal ESP32 memiliki resolusi default \textbf{12-bit}[cite: 1, 6], rentang tegangan $0\text{--}3.3\text{ V}$ dibagi ke dalam $2^{12} = 4096$ tingkat nilai digital ($0$ hingga $4095$) dengan ketelitian sekitar $0.805\text{ mV}$ per langkah[cite: 1, 6, 8]. Oleh karena itu, ADC mampu merepresentasikan gradasi perubahan tegangan akibat variasi intensitas cahaya pada LDR secara detail, bukan sekadar dua kondisi nyala atau mati[cite: 1, 5, 6].
+    \end{itemize}
+\end{enumerate}
 
 \section{Kesimpulan}
 Kesimpulan berisi ringkasan dari hasil praktikum dan hal-hal penting yang didapatkan. Bagian ini menjawab tujuan praktikum, mencantumkan hasil yang sesuai atau tidak sesuai dengan teori, serta pembelajaran yang diperoleh oleh praktikan.
