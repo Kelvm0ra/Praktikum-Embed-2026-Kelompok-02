@@ -685,10 +685,9 @@ void loop() {
 }
 \end{lstlisting}
 
-\begin{figure}[h!]
+\begin{figure}
 \centering
-% Ganti 'simulasi_matrix_3x3.png' dengan nama file tangkapan layar Wokwi Anda
-\fbox{\parbox{0.85\textwidth}{\centering \vspace{2.5cm} Wokwi.png \vspace{2.5cm}}}
+\includegraphics[width=0.5\textwidth]{Wokwi.png}
 \caption{Hasil simulasi rangkaian Matrix Pushbutton $3\times 3$ mengendalikan Matrix LED $3\times 3$ pada Wokwi}
 \end{figure}
 
@@ -720,7 +719,8 @@ void loop() {
 \end{enumerate}
 
 \section{Kesimpulan}
-Kesimpulan berisi ringkasan dari hasil praktikum dan hal-hal penting yang didapatkan. Bagian ini menjawab tujuan praktikum, mencantumkan hasil yang sesuai atau tidak sesuai dengan teori, serta pembelajaran yang diperoleh oleh praktikan.
+
+Praktikum Modul 1 telah memperkenalkan konfigurasi lingkungan pengembangan \textbf{PlatformIO pada Visual Studio Code} serta dasar pemrograman mikrokontroler \textbf{STM32 Blackpill} dan \textbf{ESP32} melalui akses GPIO digital maupun analog[cite: 1]. Berdasarkan hasil pengujian, \textbf{Percobaan 1 dan Percobaan 2 berhasil sepenuhnya sesuai dengan teori}, di mana program \textit{Blink} mampu mengendalikan LED \textit{onboard} secara periodik setiap 500~ms menggunakan \textit{framework} Arduino melalui ST-Link pada STM32 (aktif \texttt{LOW} pada \texttt{PC13}) maupun \textit{framework} ESP-IDF pada ESP32 (\texttt{GPIO 2})[cite: 1]. Sebaliknya, \textbf{hasil pada Percobaan 3, Percobaan 4, dan Percobaan 5 belum sepenuhnya sesuai dengan teori} akibat keterbatasan dokumentasi data serta dugaan kesalahan penyusunan rangkaian pada \textit{breadboard}, sehingga pembacaan tombol pada konfigurasi \textit{pull-up}/\textit{pull-down} dan \textit{debouncing} kurang optimal serta sensor LDR gagal merespons perubahan nilai ADC pada rangkaian pembagi tegangan[cite: 1]. Melalui rangkaian kegiatan ini, praktikan memperoleh pembelajaran penting mengenai perbedaan arsitektur dan tingkat abstraksi \textit{framework} Arduino versus ESP-IDF, mekanisme pencegahan kondisi \textit{floating} dan efek \textit{bouncing} pada input mekanik, prinsip pembacaan sinyal analog melalui ADC 12-bit, serta pentingnya ketelitian verifikasi jalur pengkabelan perangkat keras sebelum menjalankan program[cite: 1].
 
 \section{Lampiran}
 \subsection{Dokumentasi saat praktikum}
