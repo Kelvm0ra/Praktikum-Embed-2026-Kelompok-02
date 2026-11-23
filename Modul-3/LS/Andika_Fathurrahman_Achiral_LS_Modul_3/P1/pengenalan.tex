@@ -1,0 +1,155 @@
+\section{Pendahuluan}
+
+\subsection{Latar Belakang}
+Perkembangan teknologi sistem tertanam (\textit{embedded systems}) modern menuntut sebuah unit mikrokontroler untuk mampu berinteraksi dengan beragam komponen eksternal secara terintegrasi. Dalam implementasi nyata, sebuah papan mikrokontroler seperti ESP32 tidak bekerja secara terisolasi, melainkan harus bertukar informasi dengan mikrokontroler lain, membaca data dari sensor gerak inersia, menampilkan informasi pada layar penampil lokal, hingga terhubung ke jaringan komputer lokal. Namun, ketersediaan pin masukan dan keluaran umum (\textit{General Purpose Input/Output}) pada mikrokontroler bersifat terbatas, sehingga diperlukan metode pertukaran data yang efisien dan terstandarisasi.
+
+Permasalahan utama dalam perancangan antarmuka perangkat keras sistem tertanam terletak pada efisiensi penggunaan jalur fisik serta kesesuaian karakteristik transfer data antarperangkat. Penggunaan jalur komunikasi paralel memerlukan terlalu banyak pin untuk setiap bit data, sedangkan penyediaan jalur terpisah secara individual untuk setiap periferal menjadi tidak praktis ketika beberapa komponen harus dioperasikan bersamaan dalam satu sistem. Selain itu, setiap jenis periferal memiliki kebutuhan komunikasi yang berbeda: pertukaran pesan sederhana antar-board memerlukan kesepakatan laju data tanpa jalur pewaktuan bersama, integrasi banyak perangkat pada satu jalur membutuhkan mekanisme pengalamatan yang mencegah tabrakan data, sementara pembacaan sensor berkecepatan tinggi dan modul antarmuka jaringan menuntut kecepatan transfer tinggi dengan beban pemrosesan CPU yang seminimal mungkin.
+
+Berdasarkan permasalahan tersebut, penguasaan berbagai protokol komunikasi serial serta mekanisme optimasi transfer memori menjadi kompetensi fundamental dalam pembelajaran sistem tertanam. Melalui praktikum Modul 3 ini, mahasiswa mempelajari dan mengimplementasikan secara langsung lima skenario komunikasi pada mikrokontroler ESP32: komunikasi asinkron antar-ESP32 menggunakan antarmuka UART2, pengoperasian perangkat ganda layar OLED dan sensor IMU MPU6500 pada satu bus I2C yang sama, pembacaan sensor IMU MPU6500 berkecepatan tinggi melalui antarmuka SPI, percepatan pembacaan blok data sensor menggunakan fitur \textit{Direct Memory Access} (DMA), serta komunikasi jaringan kabel Ethernet menggunakan modul W5500 melalui jalur SPI.
+
+Pemahaman terhadap konsep dan implementasi komunikasi serial ini memiliki keterkaitan erat dengan berbagai aplikasi dunia nyata saat ini. Protokol UART, I2C, dan SPI merupakan tulang punggung komunikasi internal pada perangkat \textit{Internet of Things} (IoT), sistem navigasi dan pemantauan gerak berbasis sensor inersia pada robotika maupun perangkat sandang (\textit{wearable devices}), antarmuka manusia-mesin (\textit{human-machine interface}) berbasis layar OLED, serta simpul akuisisi data industri yang mengandalkan konektivitas jaringan kabel Ethernet yang stabil dan deterministik.
+
+\subsection{Dasar Teori}
+
+\subsubsection{Perbandingan Umum Protokol Komunikasi Serial}
+Komunikasi serial merupakan metode pengiriman data secara berurutan bit demi bit melalui satu atau beberapa jalur kabel. Berdasarkan keberadaan sinyal pewaktuan (\textit{clock}) bersama, komunikasi serial pada mikrokontroler ESP32 terbagi menjadi komunikasi asinkron dan sinkron. Perbandingan karakteristik utama dari ketiga protokol yang digunakan dalam praktikum ini dirangkum pada Tabel~\ref{tab:perbandingan_serial}.
+
+\begin{table}[h!]
+    \centering
+    \caption{Perbandingan Karakteristik Protokol Komunikasi Serial pada Modul Praktikum}
+    \label{tab:perbandingan_serial}
+    \vspace{4pt}
+    \begin{tabularx}{\textwidth}{>{\bfseries}l l X X}
+        \toprule
+        Protokol & Sinkronisasi & Jalur Sinyal Utama & Mekanisme Pemilihan Perangkat \\
+        \midrule
+        UART & Asinkron & TX, RX, GND & Koneksi titik-ke-titik secara menyilang (\textit{cross-over}) \\
+        \addlinespace[4pt]
+        I2C  & Sinkron  & SDA, SCL, GND & Pengalamatan unik pada paket data (misalnya \texttt{0x3C} dan \texttt{0x68}) \\
+        \addlinespace[4pt]
+        SPI  & Sinkron  & MOSI, MISO, SCK, CS & Sinyal kendali fisik terpisah pada pin \textit{Chip Select} (CS) \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\subsubsection{UART (\textit{Universal Asynchronous Receiver-Transmitter})}
+UART adalah protokol komunikasi serial asinkron yang beroperasi tanpa menggunakan kabel pengatur waktu (\textit{clock}) bersama antara perangkat pengirim dan penerima. Agar kedua perangkat dapat menafsirkan deretan bit secara akurat, keduanya wajib dikonfigurasi menggunakan kecepatan pengiriman data (\textit{baud rate}) yang sama, misalnya \texttt{115200} bps, serta format bingkai data yang identik seperti \texttt{8N1} (8 bit data, tanpa bit paritas, dan 1 bit berhenti).
+
+Secara fisik, komunikasi UART menggunakan dua jalur data utama, yaitu \textbf{TX} (\textit{Transmitter}) dan \textbf{RX} (\textit{Receiver}), yang dihubungkan secara menyilang (\textit{cross-over}): pin TX pada perangkat pertama dihubungkan ke pin RX pada perangkat kedua, dan pin RX pada perangkat pertama dihubungkan ke pin TX pada perangkat kedua, disertai penyatuan jalur referensi tegangan \textbf{GND} bersama. Pada papan mikrokontroler ESP32, selain antarmuka \texttt{UART0} yang terhubung ke komputer untuk keperluan \textit{Serial Monitor}, tersedia antarmuka perangkat keras tambahan yaitu \textbf{UART2} (dengan pin baku \texttt{RX2 = GPIO 16} dan \texttt{TX2 = GPIO 17}) yang dapat dimanfaatkan untuk pertukaran data langsung dengan board ESP32 lainnya.
+
+\subsubsection{I2C (\textit{Inter-Integrated Circuit})}
+I2C merupakan protokol komunikasi serial sinkron dua arah yang hanya memerlukan dua jalur sinyal utama, yaitu \textbf{SDA} (\textit{Serial Data}) sebagai jalur pertukaran data dan \textbf{SCL} (\textit{Serial Clock}) sebagai jalur sinyal pewaktuan. Pada mikrokontroler ESP32, pin standar untuk bus I2C berada pada \texttt{GPIO 21} untuk \texttt{SDA} dan \texttt{GPIO 22} untuk \texttt{SCL}.
+
+Keunggulan utama arsitektur bus I2C adalah kemampuannya menghubungkan lebih dari satu perangkat (\textit{multi-device}) pada dua kabel yang sama dalam konfigurasi satu pengendali utama (\textit{master}) dan beberapa perangkat pendukung (\textit{slave}). Setiap komponen pada bus yang sama dibedakan melalui \textbf{alamat unik} (\textit{device address}) sehingga data tidak saling bertukar. Dalam praktikum ini, dua komponen terhubung secara paralel pada jalur \texttt{SDA} dan \texttt{SCL} yang sama:
+\begin{itemize}
+    \item \textbf{Layar OLED (SSD1306 / SH1106):} beroperasi pada alamat I2C \texttt{0x3C} dan dikendalikan menggunakan pustaka perangkat lunak \texttt{U8g2}.
+    \item \textbf{Sensor Gerak IMU MPU6500:} beroperasi pada alamat I2C \texttt{0x68} ketika pin \texttt{AD0} dihubungkan ke \texttt{GND} (atau beralih ke alamat \texttt{0x69} apabila dihubungkan ke \texttt{3.3V}), serta diakses menggunakan pustaka bawaan \texttt{Wire}.
+\end{itemize}
+Karena modul MPU6500 mendukung mode antarmuka I2C maupun SPI, pemilihan mode I2C dilakukan dengan menarik pin \texttt{CS/NCS} secara tetap ke tegangan \texttt{3.3V}.
+
+\subsubsection{SPI (\textit{Serial Peripheral Interface})}
+SPI adalah protokol komunikasi serial sinkron berkecepatan tinggi yang mampu mengirimkan dan menerima data secara bersamaan (\textit{full-duplex}). Berbeda dengan I2C, antarmuka SPI menggunakan empat jalur kabel utama:
+\begin{itemize}
+    \item \textbf{MOSI (\textit{Master Out Slave In}):} jalur pengiriman data dari ESP32 sebagai \textit{master} menuju sensor atau modul \textit{slave} (\texttt{GPIO 23} pada ESP32).
+    \item \textbf{MISO (\textit{Master In Slave Out}):} jalur penerimaan data dari perangkat \textit{slave} menuju ESP32 (\texttt{GPIO 19} pada ESP32).
+    \item \textbf{SCK (\textit{Serial Clock}):} jalur sinyal pewaktuan yang dibangkitkan oleh \textit{master} (\texttt{GPIO 18} pada ESP32).
+    \item \textbf{CS (\textit{Chip Select}):} jalur pemilih perangkat aktif yang ditarik ke logika rendah (\texttt{LOW}) selama transaksi berlangsung dan dikembalikan ke logika tinggi (\texttt{HIGH}) setelah selesai (misalnya menggunakan \texttt{GPIO 5}).
+\end{itemize}
+
+Alih-alih menyematkan alamat perangkat pada paket data seperti halnya I2C, SPI memilih perangkat tujuan secara fisik menggunakan kabel \texttt{CS} tersendiri untuk setiap komponen. Meskipun membutuhkan jumlah kabel yang lebih banyak dibandingkan I2C, SPI menawarkan laju transfer data yang jauh lebih tinggi (misalnya \texttt{1 MHz} pada pengujian pembacaan sensor). Pada sensor IMU MPU6500, mode SPI diaktifkan dengan menghubungkan pin \texttt{CS/NCS} ke pin kendali GPIO ESP32, sementara operasi baca dan tulis register dibedakan melalui bit paling signifikan pada byte alamat: bit diatur bernilai \texttt{1} (\texttt{reg | 0x80}) untuk membaca data, dan bernilai \texttt{0} (\texttt{reg \& 0x7F}) untuk menulis konfigurasi register.
+
+\subsubsection{DMA (\textit{Direct Memory Access})}
+Pada komunikasi SPI konvensional yang bersifat memblokir (\textit{blocking}), unit pemroses utama (CPU) harus menangani proses pengiriman dan penerimaan data satu per satu secara berurutan (byte demi byte), misalnya melalui pemanggilan fungsi \texttt{SPI.transfer()} di dalam perulangan. Akibatnya, siklus waktu kerja CPU banyak tersita hanya untuk menunggu hingga setiap transaksi transfer selesai dilakukan.
+
+Mekanisme \textbf{DMA (\textit{Direct Memory Access})} mengatasi keterbatasan tersebut dengan mendelegasikan proses pemindahan data antara periferal SPI dan memori RAM secara langsung kepada pengendali perangkat keras DMA di latar belakang. Dalam penerapannya pada ESP32 melalui antarmuka \texttt{spi\_master}, perangkat lunak menyiapkan penyangga memori (\textit{buffer}) statis yang sejajar 4-byte (\texttt{txBuf} dan \texttt{rxBuf}), kemudian CPU cukup memberikan perintah antrean transaksi satu kali di awal untuk mengambil sekumpulan blok data sekaligus (\textit{burst read}, seperti 14 byte register sensor MPU6500) dan mengambil hasilnya setelah transfer selesai.
+
+\subsubsection{Sensor IMU MPU6500 dan Antarmuka SPI ke Ethernet (W5500)}
+Sensor \textbf{MPU6500} merupakan unit pengukuran inersia (\textit{Inertial Measurement Unit}) yang mengintegrasikan akselerometer 3-sumbu dan giroskop 3-sumbu dalam satu chip. Data mentah 16-bit yang dibaca mulai dari register \texttt{ACCEL\_XOUT\_H} (\texttt{0x3B}) dikonversi menjadi satuan fisik berdasarkan rentang pengukuran yang dikonfigurasi, yakni membagi nilai mentah akselerometer dengan faktor sensitivitas \texttt{16384} untuk rentang $\pm 2\text{g}$ (menghasilkan satuan percepatan gravitasi $\text{g}$) serta membagi nilai mentah giroskop dengan faktor \texttt{131} untuk rentang $\pm 250^\circ/\text{s}$ (menghasilkan satuan kecepatan sudut derajat per detik).
+
+Selain untuk pembacaan sensor berkecepatan tinggi, bus SPI juga dimanfaatkan untuk menghubungkan mikrokontroler ESP32 dengan modul antarmuka jaringan kabel \textbf{Ethernet W5500}. Chip W5500 telah dilengkapi pengolah protokol jaringan terintegrasi di dalam perangkat kerasnya. Dengan menginisialisasi alamat fisik (\textit{MAC address}) serta alamat protokol internet (\textit{IP address}) statis yang berada pada satu subnet jaringan lokal yang sama dengan komputer melalui pustaka \texttt{Ethernet}, modul W5500 dapat merespons permintaan jaringan dasar seperti paket ARP dan balasan perintah \texttt{ping} (\textit{ICMP Echo Reply}) secara otomatis pada tingkat chip tanpa memerlukan kode pemrosesan tambahan di dalam fungsi perulangan utama (\texttt{loop()}).
+
+%===========================================================%
+\section{Tugas Pendahuluan}
+\begin{enumerate}[label=\textbf{\arabic*.}, leftmargin=*, itemsep=10pt]
+
+    \item \textbf{Perbedaan mendasar antara protokol UART, I2C, dan SPI}
+
+    Ketiga protokol komunikasi serial tersebut memiliki perbedaan mendasar pada metode sinkronisasi waktu, jumlah jalur fisik, arah aliran data, kecepatan transfer, serta mekanisme pemilihan perangkat tujuan. Perbedaan utama antara UART, I2C, dan SPI dirangkum pada Tabel~\ref{tab:perbedaan_protokol} dan dijelaskan lebih rinci di bawah ini.
+
+    \begin{table}[h!]
+        \centering
+        \caption{Perbandingan Mendasar Protokol Komunikasi UART, I2C, dan SPI}
+        \label{tab:perbedaan_protokol}
+        \vspace{4pt}
+        \begin{tabularx}{\textwidth}{>{\bfseries}l X X X}
+            \toprule
+            Aspek Pembanding & UART & I2C & SPI \\
+            \midrule
+            Sinkronisasi & Asinkron (tanpa jalur \textit{clock} bersama) & Sinkron (menggunakan jalur \texttt{SCL}) & Sinkron (menggunakan jalur \texttt{SCK}) \\
+            \addlinespace[4pt]
+            Jumlah Jalur Sinyal & 2 kabel data (\texttt{TX}, \texttt{RX}) + \texttt{GND} & 2 kabel sinyal (\texttt{SDA}, \texttt{SCL}) + \texttt{GND} & Minimal 4 kabel (\texttt{MOSI}, \texttt{MISO}, \texttt{SCK}, \texttt{CS}) + \texttt{GND} \\
+            \addlinespace[4pt]
+            Topologi Koneksi & Titik-ke-titik (\textit{point-to-point}) & Bus \textit{multi-master} / \textit{multi-slave} & Bus \textit{single-master} / \textit{multi-slave} \\
+            \addlinespace[4pt]
+            Arah Transfer Data & \textit{Full-duplex} & \textit{Half-duplex} & \textit{Full-duplex} \\
+            \addlinespace[4pt]
+            Pemilihan Perangkat & Tidak ada pengalamatan (koneksi langsung) & Alamat unik perangkat pada bingkai data & Pin fisik \textit{Chip Select} (\texttt{CS}) terpisah \\
+            \addlinespace[4pt]
+            Kecepatan Transfer & Rendah hingga menengah (umumnya hingga 115200 bps atau beberapa Mbps) & Menengah (100 kHz standar, 400 kHz cepat, hingga 3,4 MHz) & Sangat tinggi (dapat mencapai puluhan MHz) \\
+            \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \begin{itemize}
+        \item \textbf{Sinkronisasi Pewaktuan:} UART bersifat \textit{asinkron} sehingga tidak memerlukan kabel \textit{clock} bersama; kedua perangkat menyelaraskan pembacaan bit berdasarkan kesepakatan nilai \textit{baud rate} serta bit awal (\textit{start bit}) dan bit berhenti (\textit{stop bit}). Sebaliknya, I2C dan SPI bersifat \textit{sinkron}, di mana perangkat pengendali utama (\textit{master}) membangkitkan sinyal pewaktuan bersama melalui jalur \texttt{SCL} (pada I2C) atau \texttt{SCK} (pada SPI) untuk menentukan kapan setiap bit data dicuplik.
+        \item \textbf{Arsitektur Kabel dan Arah Data:} UART menghubungkan dua perangkat secara menyilang (\texttt{TX} ke \texttt{RX} dan sebaliknya) secara \textit{full-duplex}. I2C hanya memerlukan dua kabel bersama (\texttt{SDA} dan \texttt{SCL}) untuk banyak perangkat, tetapi bekerja secara \textit{half-duplex} karena jalur \texttt{SDA} dipakai bergantian untuk mengirim dan menerima data. SPI menggunakan jalur terpisah untuk keluaran dan masukan (\texttt{MOSI} dan \texttt{MISO}) sehingga mendukung transfer \textit{full-duplex} berkecepatan tinggi dengan konsekuensi jumlah kabel yang lebih banyak.
+    \end{itemize}
+
+    \item \textbf{Mekanisme I2C melayani banyak perangkat pada satu bus dibandingkan kebutuhan jalur \textit{Chip Select} (CS) terpisah pada SPI}
+
+    Perbedaan cara kedua protokol menangani banyak perangkat (\textit{multi-device}) terletak pada apakah identitas perangkat tujuan disisipkan ke dalam paket data atau dikendalikan melalui sinyal perangkat keras terpisah:
+    \begin{itemize}
+        \item \textbf{Pengalamatan Logis pada Bus I2C:} Protokol I2C dirancang dengan arsitektur bus paralel yang terhubung ke jalur \texttt{SDA} dan \texttt{SCL} menggunakan konfigurasi keluaran \textit{open-drain} dengan resistor \textit{pull-up}. Setiap transaksi dimulai oleh \textit{master} dengan membangkitkan kondisi \textit{START}, lalu mengirimkan deretan bit \textbf{alamat unik} 7-bit (atau 10-bit) beserta 1 bit penentu operasi baca atau tulis (\textit{R/W}). Seluruh perangkat \textit{slave} di bus mendengarkan alamat tersebut, tetapi hanya perangkat yang memiliki alamat sesuai (misalnya layar OLED pada alamat \texttt{0x3C} atau sensor IMU MPU6500 pada alamat \texttt{0x68}) yang akan membalas dengan sinyal \textit{Acknowledge} (\texttt{ACK}) dan memproses pertukaran data, sedangkan perangkat lain mengabaikan lalu lintas bus hingga muncul kondisi \textit{STOP}. Selama alamat tiap komponen unik, tidak diperlukan jalur pemilih fisik tambahan.
+        \item \textbf{Pemilihan Fisik melalui Pin \texttt{CS} pada SPI:} Protokol SPI mengutamakan kecepatan transfer maksimal dan kesederhanaan perangkat keras sehingga tidak menyertakan informasi alamat maupun bit konfirmasi di dalam aliran bit datanya. Karena seluruh perangkat \textit{slave} berbagi jalur \texttt{MOSI}, \texttt{MISO}, dan \texttt{SCK} secara bersamaan tanpa mekanisme pengenalan alamat dalam data, diperlukan sinyal kendali fisik tersendiri untuk mencegah tabrakan sinyal pada jalur \texttt{MISO} (\textit{bus contention}). Oleh sebab itu, SPI menyediakan jalur \textbf{Chip Select (\texttt{CS})} terpisah yang bersifat aktif rendah (\textit{active-low}) untuk setiap perangkat: ketika \textit{master} menarik satu pin \texttt{CS} ke logika \texttt{LOW}, hanya perangkat tersebut yang aktif berkomunikasi, sementara perangkat lainnya menonaktifkan antarmukanya dengan menjaga pin \texttt{MISO} berada pada kondisi impedansi tinggi (\textit{high-impedance}).
+    \end{itemize}
+
+    \item \textbf{Alasan kedua sisi komunikasi UART harus menggunakan \textit{baud rate} yang sama}
+
+    Karena UART merupakan protokol komunikasi \textbf{asinkron} yang tidak memiliki jalur sinyal \textit{clock} bersama, perangkat penerima tidak mendapatkan rujukan pulsa waktu langsung dari pengirim untuk mengetahui batas awal dan akhir setiap bit data. Sebagai gantinya, masing-masing perangkat mengandalkan osilator dan pembangkit pewaktuan internalnya sendiri berdasarkan parameter \textbf{baud rate} yang telah ditetapkan sebelumnya (misalnya \texttt{115200} bps, yang berarti setiap bit memiliki durasi waktu tetap sebesar $T_{\text{bit}} = 1 / 115200 \approx 8{,}68\,\mu\text{s}$).
+
+    Pada saat jalur berada dalam kondisi diam (\textit{idle}), level tegangan berada pada logika tinggi (\texttt{HIGH}). Komunikasi dimulai ketika pengirim menurunkan tegangan ke logika rendah (\texttt{LOW}) sebagai tanda \textit{start bit}. Begitu mendeteksi transisi turun tersebut, penerima menyalakan pencacah waktu internalnya dan melakukan pencuplikan (\textit{sampling}) logika tepat di bagian tengah setiap interval waktu bit ($T_{\text{bit}}$) untuk membaca bit data ke-0 hingga ke-7 serta memverifikasi \textit{stop bit} pada akhir bingkai. Jika \textit{baud rate} pengirim dan penerima berbeda, interval waktu pencuplikan penerima menjadi lebih cepat atau lebih lambat dibandingkan lebar bit aktual yang dikirimkan. Pergeseran fasa waktu (\textit{timing drift}) ini terakumulasi pada setiap bit berikutnya sehingga penerima mencuplik posisi bit yang keliru, gagal mengenali posisi \textit{stop bit} (\textit{framing error}), dan menghasilkan data yang rusak atau tidak terbaca dengan benar.
+
+    \item \textbf{Prinsip kerja dan aplikasi protokol komunikasi CAN bus, Modbus, dan 1-Wire}
+
+    Selain UART, I2C, dan SPI yang umum digunakan untuk komunikasi jarak dekat di dalam satu papan rangkaian, terdapat beberapa protokol komunikasi serial lain yang dirancang untuk kebutuhan jarak, keandalan, maupun topologi tertentu:
+    \begin{itemize}
+        \item \textbf{CAN bus (\textit{Controller Area Network}):}
+        \begin{itemize}
+            \item \textit{Prinsip Kerja:} Protokol komunikasi serial diferensial dua kabel (\texttt{CAN\_H} dan \texttt{CAN\_L}) yang memiliki ketahanan tinggi terhadap derau elektromagnetik. CAN bekerja berbasis pesan (\textit{message-oriented}) tanpa alamat tujuan spesifik; setiap node menyiarkan bingkai data yang diawali pengenal unik (\textit{Message ID}) yang sekaligus menentukan prioritas pesan. Apabila dua node mulai mengirim secara bersamaan, mekanisme arbitrasi non-destruktif berbasis logika dominan (\texttt{0}) dan resesif (\texttt{1}) memastikan pesan berprioritas lebih tinggi memenangkan akses bus tanpa mengalami kehilangan data maupun penundaan transmisi ulang.
+            \item \textit{Aplikasi Umum:} Jaringan komunikasi internal pada industri otomotif (interkoneksi antar-\textit{Electronic Control Unit} untuk sistem mesin, pengereman ABS, transmisi, dan kantung udara), mesin alat berat, otomasi industri, serta sistem avionik.
+        \end{itemize}
+
+        \item \textbf{Modbus:}
+        \begin{itemize}
+            \item \textit{Prinsip Kerja:} Protokol komunikasi standar industri tingkat aplikasi yang beroperasi dengan arsitektur \textit{master-slave} (atau \textit{client-server}). Perangkat \textit{master} mengirimkan paket permintaan (\textit{request}) yang memuat alamat unik perangkat \textit{slave} (ID 1 hingga 247), kode fungsi (\textit{function code}) untuk membaca atau menulis register maupun status koil, alamat memori register, serta kode pemeriksaan galat (\textit{CRC/LRC}), kemudian perangkat \textit{slave} yang dituju mengirimkan paket balasan (\textit{response}). Pada lapisan fisiknya, Modbus paling sering dijalankan di atas antarmuka serial diferensial RS-485 (\textit{Modbus RTU/ASCII}) untuk jarak jauh hingga ratusan meter maupun jaringan Ethernet (\textit{Modbus TCP}).
+            \item \textit{Aplikasi Umum:} Otomasi pabrik dan kendali proses industri, komunikasi antara PLC (\textit{Programmable Logic Controller}) dan sensor/aktuator industri, sistem SCADA (\textit{Supervisory Control and Data Acquisition}), pemantauan meteran daya listrik pintar, serta sistem otomasi gedung.
+        \end{itemize}
+
+        \item \textbf{1-Wire:}
+        \begin{itemize}
+            \item \textit{Prinsip Kerja:} Protokol komunikasi serial asinkron yang hanya menggunakan \textbf{satu jalur data tunggal} (\textit{half-duplex}) ditambah jalur referensi \texttt{GND}. Jalur data terhubung ke sumber tegangan melalui resistor \textit{pull-up}, sehingga komunikasi dilakukan dengan menarik jalur ke logika rendah dalam durasi pulsa waktu tertentu untuk merepresentasikan kondisi \textit{reset}, bit \texttt{0}, dan bit \texttt{1}. Fitur khas 1-Wire adalah kemampuan \textit{parasitic power}, di mana perangkat \textit{slave} dapat mengambil daya operasi langsung dari jalur data saat kondisi jalur tinggi, serta kepemilikan nomor seri unik 64-bit bawaan pabrik pada setiap chip sebagai alamat identifikasi di bus.
+            \item \textit{Aplikasi Umum:} Pengukuran suhu terdistribusi menggunakan banyak sensor pada satu jalur panjang (seperti sensor suhu digital DS18B20), sistem autentikasi perangkat keras dan kunci akses elektronik (\textit{iButton}), serta pemantauan identitas dan kesehatan paket baterai.
+        \end{itemize}
+    \end{itemize}
+
+    \item \textbf{Keuntungan penggunaan DMA (\textit{Direct Memory Access}) dibandingkan pembacaan data secara \textit{blocking}}
+
+    Penggunaan pengendali perangkat keras DMA pada antarmuka komunikasi seperti SPI memberikan sejumlah keuntungan signifikan dibandingkan metode pembacaan konvensional secara \textit{blocking} (di mana CPU menunggu selesainya setiap byte transaksi secara berurutan):
+    \begin{itemize}
+        \item \textbf{Mengurangi Beban Kerja CPU (\textit{CPU Offloading}):} Pada mode \textit{blocking}, prosesor harus aktif menangani pengiriman dan penerimaan data byte demi byte serta menunggu siklus I/O selesai (\textit{busy-waiting}). Dengan DMA, proses pemindahan blok data antara periferal SPI dan memori RAM ditangani langsung oleh perangkat keras DMA di latar belakang, sehingga CPU cukup menyiapkan penyangga memori (\textit{buffer}) dan memberikan satu kali perintah antrean transaksi di awal.
+        \item \textbf{Meningkatkan Kecepatan dan Efisiensi Transfer Blok Data (\textit{Burst Transfer}):} DMA dapat memindahkan sekumpulan byte berurutan (misalnya 14 byte register data akselerometer dan giroskop pada sensor IMU MPU6500) dalam satu rangkaian transaksi tanpa jeda instruksi perangkat lunak di antara setiap byte, sehingga latensi pembacaan keseluruhan menjadi lebih singkat dan stabil.
+        \item \textbf{Meningkatkan Responsivitas Sistem dan Pemrosesan Paralel:} Karena waktu siklus prosesor tidak tersita untuk menunggu antarmuka periferal yang bekerja jauh lebih lambat daripada frekuensi clock CPU, prosesor dapat menjalankan tugas komputasi lain secara bersamaan, seperti pemrosesan filter sinyal, algoritma kendali aktuator, atau komunikasi jaringan tanpa terhambat oleh proses akuisisi data sensor.
+        \item \textbf{Efisiensi Konsumsi Daya:} Penyelesaian transaksi pemindahan data secara perangkat keras memungkinkan CPU menyelesaikan beban kerjanya lebih cepat dan menghabiskan lebih banyak waktu pada mode hemat daya (\textit{sleep mode}) pada aplikasi sistem tertanam berbasis baterai.
+    \end{itemize}
+
+\end{enumerate}
