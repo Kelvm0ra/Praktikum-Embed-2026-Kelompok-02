@@ -1,0 +1,89 @@
+\section{Pendahuluan}
+\subsection{Latar Belakang}
+Bagian ini menjelaskan alasan dilaksanakannya praktikum, termasuk pentingnya topik yang dibahas. Latar belakang mencantumkan permasalahan yang ingin diselesaikan, urgensi pembelajaran topik, serta keterkaitannya dengan aplikasi dunia nyata atau teknologi saat ini.
+
+\subsection{Dasar Teori}
+Bagian ini memuat teori-teori dasar yang mendukung pelaksanaan praktikum. Penjelasan mencakup konsep teknis, nama istilah, serta prinsip ilmiah yang relevan. Tujuannya adalah untuk memberikan pemahaman mendalam sebelum praktikum dilakukan.
+
+%===========================================================%
+\section{Tugas Pendahuluan}
+\begin{enumerate}[label=\textbf{\arabic*.}, leftmargin=*, itemsep=10pt]
+
+    \item \textbf{Perbedaan mendasar antara \textit{polling} dan \textit{interrupt} dalam menangani kejadian pada mikrokontroler}
+
+    Perbedaan mendasar antara metode \textit{polling} dan \textit{interrupt} terletak pada cara prosesor (CPU) mendeteksi serta merespons perubahan kondisi eksternal, seperti penekanan tombol pada pin masukan mikrokontroler. Perbandingan karakteristik utama kedua metode tersebut dirangkum pada Tabel~\ref{tab:polling_vs_interrupt}.
+
+    \begin{table}[h!]
+        \centering
+        \caption{Perbandingan Metode \textit{Polling} dan \textit{Interrupt} pada Mikrokontroler}
+        \label{tab:polling_vs_interrupt}
+        \vspace{4pt}
+        \begin{tabularx}{\textwidth}{>{\bfseries}l X X}
+            \toprule
+            Aspek Pembanding & Polling & Interrupt \\
+            \midrule
+            Mekanisme Deteksi & CPU memeriksa status pin secara berulang dan aktif di dalam program utama & Perangkat keras memantau perubahan sinyal dan mengirim sinyal interupsi ke CPU \\
+            \addlinespace[4pt]
+            Pemanfaatan CPU & Kurang efisien karena siklus CPU terpakai terus-menerus meski tidak ada kejadian & Sangat efisien karena CPU bebas menjalankan tugas lain hingga kejadian muncul \\
+            \addlinespace[4pt]
+            Waktu Respons & Bergantung pada lama eksekusi satu siklus perulangan utama (\textit{loop}) & Sangat cepat dan deterministik segera setelah transisi sinyal terdeteksi \\
+            \addlinespace[4pt]
+            Risiko Kehilangan Sinyal & Tinggi apabila penekanan tombol berlangsung singkat saat CPU sibuk & Sangat rendah karena transisi sinyal langsung memicu perangkat keras \\
+            \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \begin{itemize}
+        \item \textbf{Metode \textit{Polling}:} Program utama secara berkala membaca status logika pin tombol (misalnya melalui pemanggilan fungsi \texttt{digitalRead()}) di dalam perulangan terus-menerus. Apabila tombol ditekan dan dilepas secara cepat ketika CPU sedang mengeksekusi instruksi lain atau fungsi tunda, perubahan sinyal tersebut dapat terlewatkan. Selain itu, waktu prosesor terbuang untuk memeriksa tombol meskipun tidak terjadi perubahan status.
+        \item \textbf{Metode \textit{Interrupt}:} Rangkaian perangkat keras pengendali GPIO pada mikrokontroler dikonfigurasi untuk mendeteksi transisi tepi sinyal tertentu (\textit{rising edge}, \textit{falling edge}, atau \textit{change}). Saat tombol ditekan dan memicu transisi logika, perangkat keras segera membangkitkan permintaan interupsi (\textit{Interrupt Request}). CPU menghentikan sementara eksekusi program utama, menyimpan konteks register saat ini, mengeksekusi fungsi penanganan khusus yang disebut \textit{Interrupt Service Routine} (ISR), lalu kembali melanjutkan instruksi yang tertunda.
+    \end{itemize}
+
+    \item \textbf{Alasan kode di dalam ISR harus singkat dan sederhana serta risiko jika berjalan terlalu lama}
+
+    Kode di dalam \textit{Interrupt Service Routine} (ISR) wajib dirancang sesingkat dan sesederhana mungkin karena selama ISR dieksekusi, alur eksekusi program utama serta interupsi lain dengan prioritas yang sama atau lebih rendah ditangguhkan sementara. Praktik terbaik dalam perancangan ISR adalah membatasi tugasnya hanya pada operasi cepat yang bersifat atomik, seperti mengubah nilai variabel penanda (\textit{flag}) bertipe \texttt{volatile}, menambah nilai pencacah (\textit{counter}), mencatat cap waktu (\textit{timestamp}), atau mengirim data ringkas ke antrean menggunakan fungsi khusus ISR (seperti \texttt{xQueueSendFromISR()}), sementara pemrosesan data yang berat dialihkan ke perulangan utama atau \textit{task} terpisah.
+
+    Apabila kode di dalam ISR berjalan terlalu lama, sistem berisiko mengalami beberapa gangguan serius berikut:
+    \begin{itemize}
+        \item \textbf{Kehilangan Interupsi Berikutnya (\textit{Missed Interrupts}):} Interupsi dari sumber periferal lain yang datang saat CPU masih tertahan di dalam ISR dapat tertunda atau hilang apabila terjadi lebih dari satu kali sebelum interupsi sebelumnya selesai dilayani.
+        \item \textbf{Menurunnya Responsivitas Sistem (\textit{High Latency}):} Tugas-tugas pada program utama maupun periferal komunikasi waktu nyata mengalami keterlambatan eksekusi sehingga perilaku sistem menjadi tidak stabil atau mengalami pergeseran waktu (\textit{jitter}).
+        \item \textbf{Pemicuan \textit{Reset} oleh \textit{Interrupt Watchdog}:} Pada mikrokontroler seperti ESP32, terdapat pengawas khusus (\textit{Interrupt Watchdog Timer}) yang memantau lamanya waktu penonaktifan interupsi; jika sebuah ISR menahan CPU melebihi batas waktu tersebut, sistem dianggap macet dan memicu \textit{reset} perangkat keras secara paksa.
+        \item \textbf{Kegagalan Sistem atau \textit{Deadlock}:} Pemanggilan fungsi yang bersifat memblokir (\textit{blocking}), mencetak pesan panjang ke port serial, atau mengalokasikan memori dinamis di dalam ISR dapat menyebabkan sistem terkunci permanen karena mekanisme penjadwalan dan interupsi pendukungnya sedang tidak aktif.
+    \end{itemize}
+
+    \item \textbf{Perbedaan antara \textit{timer interrupt} dan penggunaan fungsi \texttt{delay()} untuk tugas periodik}
+
+    Meskipun keduanya dapat digunakan untuk mengatur jeda waktu eksekusi suatu tugas, \textit{timer interrupt} dan fungsi \texttt{delay()} memiliki mekanisme kerja serta dampak kinerja yang sangat berbeda:
+    \begin{itemize}
+        \item \textbf{Sifat Eksekusi (\textit{Non-blocking} vs \textit{Blocking}):} Fungsi \texttt{delay()} bekerja secara memblokir (\textit{blocking}) dengan menahan alur eksekusi CPU pada baris kode tersebut hingga durasi waktu tunda berakhir, sehingga CPU tidak dapat menjalankan instruksi lain pada alur yang sama. Sebaliknya, \textit{timer interrupt} memanfaatkan modul pencacah perangkat keras (\textit{hardware timer}) yang berjalan secara mandiri di latar belakang berdasarkan sinyal \textit{clock} sistem, sehingga CPU tetap bebas mengeksekusi tugas-tugas lain selama jeda waktu berlangsung.
+        \item \textbf{Presisi dan Akurasi Periode:} Pada penggunaan fungsi \texttt{delay()}, periode pengulangan tugas sebenarnya adalah penjumlahan antara waktu tunda dan lama eksekusi kode tugas itu sendiri ($T_{\text{total}} = T_{\text{delay}} + T_{\text{eksekusi}}$), sehingga interval waktu menjadi bergeser (\textit{drift}) apabila beban komputasi berubah. Sebaliknya, \textit{timer interrupt} membangkitkan interupsi tepat setiap kali pencacah perangkat keras mencapai nilai batasnya secara konsisten, menghasilkan interval periodik yang jauh lebih presisi dan deterministik.
+        \item \textbf{Skalabilitas Sistem:} Penggunaan banyak fungsi \texttt{delay()} menyulitkan pengelolaan beberapa tugas periodik dengan interval berbeda secara bersamaan, sedangkan \textit{timer interrupt} memungkinkan sistem menjadwalkan berbagai aktivitas periodik tanpa saling menghambat.
+    \end{itemize}
+
+    \item \textbf{Cara kerja \textit{watchdog timer} dalam mendeteksi dan memulihkan sistem dari kondisi \textit{hang}}
+
+    \textit{Watchdog Timer} (WDT) adalah sirkuit pencacah mundur perangkat keras (\textit{hardware countdown timer}) yang beroperasi secara independen dari alur eksekusi utama CPU sebagai mekanisme pengaman otomatis terhadap kegagalan perangkat lunak. Tahapan kerja WDT dalam mendeteksi dan memulihkan kondisi sistem yang macet (\textit{hang}) berlangsung sebagai berikut:
+    \begin{enumerate}[label=\alph*., leftmargin=*]
+        \item \textbf{Inisialisasi dan Pencacahan Mundur:} Ketika sistem mulai berjalan, WDT diaktifkan dengan nilai batas waktu tunggu tertentu (\textit{timeout period}) dan mulai menghitung mundur secara terus-menerus menggunakan sumber sinyal pewaktuan tersendiri.
+        \item \textbf{Penyegaran Berkala (\textit{Feeding / Kicking the Watchdog}):} Selama program berjalan normal tanpa hambatan, perangkat lunak secara berkala menyetel ulang nilai pencacah WDT kembali ke nilai awalnya sebelum hitungan mencapai nol (misalnya melalui pemanggilan fungsi \texttt{esp\_task\_wdt\_reset()} pada ESP32).
+        \item \textbf{Deteksi Kondisi Macet (\textit{Timeout}):} Apabila perangkat lunak terjebak dalam perulangan tak terbatas (\textit{infinite loop}), mengalami kebuntuan akses sumber daya (\textit{deadlock}), atau terhenti akibat gangguan elektromagnetik, CPU gagal menjalankan instruksi penyegaran WDT. Akibatnya, pencacah mundur WDT terus berkurang hingga mencapai nol.
+        \item \textbf{Pemulihan Otomatis (\textit{System Reset}):} Sesaat setelah pencacah WDT mencapai nol, perangkat keras WDT segera membangkitkan sinyal \textit{reset} sistem untuk memulai ulang mikrokontroler dari kondisi awal yang stabil tanpa memerlukan campur tangan operator secara manual.
+    \end{enumerate}
+
+    \item \textbf{Konsep \textit{task} dan \textit{queue} pada FreeRTOS serta kegunaannya pada mikrokontroler \textit{dual-core} seperti ESP32}
+
+    \begin{itemize}
+        \item \textbf{Konsep \textit{Task}:} Pada sistem operasi waktu nyata FreeRTOS, \textit{task} merupakan unit program independen yang menjalankan fungsi tertentu di dalam perulangannya sendiri. Setiap \textit{task} memiliki alokasi memori tumpukan (\textit{stack}), konteks register, serta tingkat prioritas tersendiri. Penjadwal (\textit{scheduler}) FreeRTOS mengatur pergantian eksekusi antar-\textit{task} berdasarkan prioritas dan statusnya (\textit{Running}, \textit{Ready}, \textit{Blocked}, atau \textit{Suspended}) sehingga berbagai proses dapat berjalan secara terstruktur.
+        \item \textbf{Konsep \textit{Queue}:} \textit{Queue} adalah struktur penyangga antrean berbasis prinsip FIFO (\textit{First-In, First-Out}) yang aman dari konflik akses bersamaan (\textit{thread-safe}) untuk pertukaran data antar-\textit{task} maupun dari ISR menuju \textit{task}. Data yang dikirim ke dalam \textit{queue} (misalnya melalui \texttt{xQueueSend()}) disalin ke ruang memori antrean, dan apabila antrean kosong, \textit{task} penerima (\texttt{xQueueReceive()}) dapat masuk ke kondisi \textit{Blocked} tanpa membebani siklus CPU hingga data baru masuk.
+        \item \textbf{Kegunaan pada Mikrokontroler \textit{Dual-Core} (ESP32):} Mikrokontroler ESP32 memiliki dua inti pemroses terpisah (\textit{Core 0} dan \textit{Core 1}). Melalui pembagian program menjadi beberapa \textit{task} (misalnya menggunakan fungsi \texttt{xTaskCreatePinnedToCore()}), beban kerja sistem dapat didistribusikan secara paralel sejati di antara kedua inti CPU—seperti menugaskan \textit{Core 0} untuk menangani komunikasi jaringan atau Wi-Fi sementara \textit{Core 1} berfokus pada akuisisi sensor dan kendali aktuator waktu nyata. Dalam arsitektur dua inti tersebut, \textit{queue} berperan penting sebagai jembatan pertukaran data yang aman sehingga mencegah kerusakan data (\textit{race condition}) ketika dua \textit{task} pada inti berbeda mengakses informasi yang sama.
+    \end{itemize}
+
+    \item \textbf{Analogi sederhana dalam kehidupan sehari-hari terkait mekanisme WDT, ISR, dan FreeRTOS}
+
+    Ketiga mekanisme tersebut dapat dianalogikan melalui aktivitas kerja operasional pada sebuah dapur restoran yang sibuk:
+    \begin{itemize}
+        \item \textbf{Analogi ISR (\textit{Interrupt Service Routine}):} Seorang koki sedang fokus memasak hidangan utama di dapur tanpa harus berjalan ke pintu depan setiap beberapa detik untuk memeriksa apakah kurir bahan datang (\textit{polling}). Ketika bel pintu depan berbunyi (\textit{interrupt}), koki segera mengecilkan api kompor, membuka pintu sebentar untuk menerima dan meletakkan paket bahan di meja penerimaan (\textit{ISR} yang singkat), lalu langsung kembali mengaduk masakannya sebelum membuka rincian paket tersebut nanti.
+        \item \textbf{Analogi WDT (\textit{Watchdog Timer}):} Di dapur tersebut terpasang alat pengingat otomatis yang berbunyi setiap 5 menit; setiap kali koki selesai mengecek kondisi kompor dan menekan tombol konfirmasi (\textit{feeding the watchdog}), waktu pengingat kembali diatur ulang ke 5 menit. Apabila koki tiba-tiba pingsan atau terjebak masalah hingga tidak menekan tombol konfirmasi sampai waktu habis, sistem pengaman dapur secara otomatis memutus aliran gas dan menyalakan sistem pemulihan darurat (\textit{system reset}) guna mencegah kebakaran.
+        \item \textbf{Analogi FreeRTOS (\textit{Task} dan \textit{Queue}):} Dapur restoran tersebut dikelola oleh seorang kepala dapur (\textit{scheduler}) yang membagi pekerjaan ke dua meja kerja utama (\textit{dual-core}) dengan peran terpisah (\textit{task}), yaitu bagian persiapan bahan, bagian pemasakan sesuai tingkat urgensi pesanan (\textit{prioritas}), dan bagian penyajian. Agar koki persiapan dan koki pemasakan tidak saling berebut talenan atau berteriak bersamaan, keduanya menggunakan **rak nampan pesanan berurutan (\textit{queue})**: bahan yang telah dipotong diletakkan berurutan ke nampan, lalu diambil oleh koki pemasakan sesuai urutan kedatangannya.
+    \end{itemize}
+
+\end{enumerate}
