@@ -1,11 +1,11 @@
 # Fdb version 4
-["biber LS"] 0 "LS.bcf" "LS.bbl" "LS" 1795449009.32689 -1
-  "LS.bcf" 1795449008 107302 9980f193ed7cc2429579111e76280db7 "pdflatex"
+["biber LS"] 0 "LS.bcf" "LS.bbl" "LS" 1795716571.04733 -1
+  "LS.bcf" 1795716570 107302 9980f193ed7cc2429579111e76280db7 "pdflatex"
   (generated)
   "LS.bbl"
   "LS.blg"
   (rewritten before read)
-["pdflatex"] 1795449006.70156 "c:/Users/andik/Downloads/Praktikum-Embed-2026-Kelompok-02/Modul-4/LS/Andika_Fathurrahman_Achiral_LS_Modul_4/LS.tex" "LS.pdf" "LS" 1795449009.32795 0
+["pdflatex"] 1795716568.62565 "c:/Users/andik/Downloads/Praktikum-Embed-2026-Kelompok-02/Modul-4/LS/Andika_Fathurrahman_Achiral_LS_Modul_4/LS.tex" "LS.pdf" "LS" 1795716571.04837 0
   "C:/Users/andik/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1794586832 121421 986c656c18d5dae14116b93751df729f ""
   "C:/Users/andik/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/ectt1095.pk" 1794016783 21972 b1f61d58260e2cd8b051d1453c999436 ""
   "C:/Users/andik/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1794022525 13402713 09e4071f37f18f121948359b470674c0 ""
@@ -136,12 +136,12 @@
   "Cover/Header.tex" 1795428003 817 f8f63a9414afeaaa15ca8f85d4f4ef04 ""
   "Cover/img/b401.png" 1795428003 43413 9a2fd61537067ffecada807204a078df ""
   "Cover/img/logodepart.png" 1795428003 37002 0f7871c228b1de42912bcfe0dae05fc4 ""
-  "LS.aux" 1795449008 1348 976e3cab29f944cc5a28781d7235dbe4 "pdflatex"
+  "LS.aux" 1795716570 2467 db05723c2294803cf244ba83ea85f766 "pdflatex"
   "LS.bbl" 1795446658 0 d41d8cd98f00b204e9800998ecf8427e "biber LS"
-  "LS.out" 1795449008 474 f646f2247e20b5f6ef92810bdd37164f "pdflatex"
-  "LS.run.xml" 1795449008 2276 49f9572208b8717175a10c83b30f3352 "pdflatex"
+  "LS.out" 1795716570 1685 e2cda12148391e1f92426ee301e14f39 "pdflatex"
+  "LS.run.xml" 1795716570 2276 49f9572208b8717175a10c83b30f3352 "pdflatex"
   "LS.tex" 1795449005 2827 06e52aa6baa8d512371b9072d0907ab4 ""
-  "P1/pengenalan.tex" 1795448149 13753 7dc15016497d539f841c2e387c6995be ""
+  "P1/pengenalan.tex" 1795716565 26783 3f3e38d19ad91c884e856970e134da1d ""
   "b401.png" 1795428003 43413 9a2fd61537067ffecada807204a078df ""
   "c:/Users/andik/Downloads/Praktikum-Embed-2026-Kelompok-02/Modul-4/LS/Andika_Fathurrahman_Achiral_LS_Modul_4/LS.tex" 1795449005 2827 06e52aa6baa8d512371b9072d0907ab4 ""
   (generated)
